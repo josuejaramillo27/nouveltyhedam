@@ -98,6 +98,7 @@ button {
   font-size: 0.9rem;
   letter-spacing: 0.5px;
   transition: var(--transition);
+  text-decoration: none;
 }
 .btn-primary:hover {
   transform: translateY(-2px);
@@ -198,7 +199,7 @@ button {
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  padding: 80px 24px 30px; /* Generous headroom so it never clips top edge */
+  padding: 80px 24px 30px;
   overflow-y: auto;
   animation: fadeIn 0.25s ease-out;
 }
@@ -257,7 +258,7 @@ button {
 /* Mascot Peeking Over Top - Positioned to physically GRAB the red border */
 .mascot-container {
   position: absolute;
-  top: -82px; /* Altura perfecta: las patitas descansan y abrazan justo el borde rojo */
+  top: -82px; /* Altura calibrada para reposar sobre el marco rojo */
   left: 50%;
   transform: translateX(-50%);
   width: 185px;
@@ -422,4 +423,84 @@ button {
 .emoji-animated {
   display: inline-block;
   animation: shake 2.5s infinite ease-in-out;
+}
+
+/* Visibility Utility */
+.view-hidden {
+  display: none !important;
+}
+
+/* Vector Browser Mockup */
+.browser-vector {
+  width: 115px;
+  background: #f1f3f7;
+  border-radius: 12px;
+  border: 1.5px solid #dbe0eb;
+  padding: 8px;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.06);
+  flex-shrink: 0;
+}
+
+.browser-dots {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.browser-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+/* Checklist items */
+.checklist-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.checklist-icon {
+  color: #11a842;
+  flex-shrink: 0;
+  margin-top: 3px;
+}
+.checklist-text {
+  font-size: 0.98rem;
+  font-weight: 600;
+  color: #1c2230;
+}
+
+/* Warning alert */
+.alert-warning {
+  margin-top: 16px;
+  background: #fff9e6;
+  border-left: 4px solid #f59e0b;
+  padding: 12px 16px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #92400e;
+  font-weight: 700;
+  font-size: 0.92rem;
+}
+
+/* Admin Table */
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.admin-table th {
+  padding: 14px;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.admin-table td {
+  padding: 14px;
+  border-bottom: 1px solid var(--border-color);
 }

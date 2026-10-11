@@ -1,32 +1,18 @@
 # HEDAMPRO - Módulo de Novedades y Anuncios
 
-Módulo interactivo oficial de Novedades y Comunicados de **HEDAMPRO** con roles divididos (Administrador y Cliente), modo oscuro y claro, sistema de pop-ups inmersivo, y métricas en tiempo real.
+Módulo interactivo oficial de Novedades y Comunicados de **HEDAMPRO** desarrollado en **HTML5, CSS3 y JavaScript Puro (Vanilla JS)**. Sin dependencias, sin Vite ni compiladores. Funciona abriendo directamente `index.html` en cualquier navegador web o en cualquier servidor estático (como GitHub Pages).
 
-## Características
+## Estructura de Archivos
 
-- **Diseño Inmersivo y Responsivo**: Estilo oscuro con acentos rojos, mascota interactiva de HedamPro peeking y alternador de tema claro/oscuro.
-- **Pop-up Principal con Control de Sesión**: Salta automáticamente en primer plano con soporte para checklists, alertas y botón de llamada a la acción (CTA).
-- **Muro / Feed de Anuncios**: Vista de exploración con historial de publicaciones anteriores.
-- **Panel de Administración Protegido**: Acceso con credenciales para moderadores (`admin`), creación y programación de publicaciones.
-- **Métricas en Tiempo Real**: Conteo dual de vistas web globales, lecturas de novedades y clics en enlaces (CTA).
-- **Interacción de la Comunidad**: Hilo de comentarios con moderación y respuestas oficiales del administrador.
+- `index.html`: Estructura principal con las vistas de Cliente, Pop-up inmersivo, Login seguro y Panel de Administración.
+- `style.css`: Estilos visuales completos, paleta Rojo/Blanco/Negro, soporte para Modo Claro/Oscuro y animaciones.
+- `app.js`: Lógica completa de la aplicación, métricas, persistencia en `localStorage`, moderación de comentarios y enrutamiento por hash (`#/` y `#/admin`).
+- `assets/`: Imágenes oficiales (`logohedam.png`, `mascot.png`).
 
-## Tecnologías
+## Uso y Acceso
 
-- [React](https://react.dev/) + [TypeScript](https://www.typescriptlang.org/)
-- [Vite](https://vitejs.dev/)
-- Vanilla CSS con diseño adaptativo y variables CSS
-- [Lucide React](https://lucide.dev/) (Iconografía)
-
-## Instalación y Ejecución
-
-```bash
-# Instalar dependencias
-npm install
-
-# Iniciar servidor de desarrollo
-npm run dev
-
-# Compilar para producción
-npm run build
-```
+- **Abrir localmente:** Simplemente haz doble clic en `index.html` en tu computadora para abrirlo en tu navegador.
+- **Acceso Administrativo:**
+  - Presiona `Ctrl + Shift + A` o haz **5 clics rápidos en el logo de HedamPro**.
+  - O accede a `index.html#admin`.
+  - Credenciales: Usuario `admin` | Contraseña `hedam2026`.

@@ -1,17 +1,441 @@
-<!doctype html>
-<html lang="es">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/png" href="/logohedam.png" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>HEDAMPRO | Novedades y Anuncios</title>
-    <!-- Google Fonts: Plus Jakarta Sans for the exact HedamPro aesthetic -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HEDAMPRO | Novedades y Anuncios Oficiales</title>
+  <link rel="icon" type="image/png" href="assets/logohedam.png" />
+  <!-- Google Fonts: Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+  <script defer src="app.js"></script>
+</head>
+<body>
+  <div class="app-layout">
+    <!-- Header -->
+    <header class="header">
+      <div class="header-inner">
+        <div class="header-title-container">
+          <div id="logo-clickable" style="cursor: pointer; display: flex; align-items: center; gap: 12px; user-select: none;" title="HEDAMPRO">
+            <img src="assets/logohedam.png" alt="Logo HedamPro" style="height: 38px; width: auto; object-fit: contain;" />
+            <span style="font-size: 1.4rem; font-weight: 900; letter-spacing: -0.5px; color: var(--text-main); text-transform: uppercase;">
+              HEDAM<span style="color: var(--accent-red);">PRO</span>
+            </span>
+          </div>
+
+          <div class="header-divider"></div>
+
+          <div class="header-text">
+            <h1>NOVEDADES</h1>
+            <p>Todas las noticias y anuncios de la plataforma</p>
+          </div>
+        </div>
+
+        <!-- Theme Switcher -->
+        <div class="flex items-center gap-4">
+          <div id="theme-toggle" class="theme-switch" role="button" tabindex="0" title="Cambiar tema">
+            <div class="theme-switch-icons">
+              <!-- Moon SVG -->
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+              </svg>
+              <!-- Sun SVG -->
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="5"></circle>
+                <line x1="12" y1="1" x2="12" y2="3"></line>
+                <line x1="12" y1="21" x2="12" y2="23"></line>
+                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                <line x1="1" y1="12" x2="3" y2="12"></line>
+                <line x1="21" y1="12" x2="23" y2="12"></line>
+                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+              </svg>
+            </div>
+            <div id="theme-thumb" class="theme-switch-thumb">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      
+      <!-- ================= VISTA CLIENTE ================= -->
+      <section id="client-view">
+        <div style="margin-bottom: 28px; display: flex; flex-direction: column; gap: 8px;">
+          <div style="display: inline-flex; align-items: center; width: fit-content;">
+            <span style="background: rgba(255, 30, 39, 0.1); border: 1px solid rgba(255, 30, 39, 0.3); color: var(--accent-red); padding: 5px 14px; border-radius: 9999px; font-size: 0.78rem; font-weight: 800; letter-spacing: 0.5px; display: flex; align-items: center; gap: 6px;">
+              ✨ TABLÓN OFICIAL DE NOVEDADES
+            </span>
+          </div>
+
+          <div style="display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 16px;">
+            <div>
+              <h2 style="font-size: 2.1rem; font-weight: 900; color: var(--text-main); letter-spacing: -0.5px; margin: 0;">
+                Noticias y Anuncios
+              </h2>
+              <p style="color: var(--text-muted); font-size: 0.92rem; marginTop: 4px;">
+                Descubre las últimas guías para distribuidores, avisos de stock y actualizaciones del sistema.
+              </p>
+            </div>
+
+            <div id="open-popup-btn-container" class="view-hidden">
+              <button id="open-featured-btn" class="btn-outline" style="padding: 8px 16px; font-size: 0.85rem;">
+                📢 Abrir Novedad Pop-up
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Feed Container -->
+        <div id="news-feed-container"></div>
+      </section>
+
+      <!-- ================= MODAL POP-UP CLIENTE ================= -->
+      <div id="modal-overlay" class="modal-overlay view-hidden">
+        <div class="modal-content" onclick="event.stopPropagation()">
+          
+          <!-- Mascota asomada agarrando el borde -->
+          <div class="mascot-container">
+            <img src="assets/mascot.png" alt="Mascota HedamPro" />
+          </div>
+
+          <!-- Botón de cierre X -->
+          <button id="modal-close-btn" class="modal-close" title="Cerrar novedad">✕</button>
+
+          <!-- Contenido Interior -->
+          <div style="padding: 36px 36px 28px;">
+            
+            <!-- Badge: NUEVA NOVEDAD -->
+            <div style="display: flex; align-items: center;">
+              <span style="background: var(--accent-red); color: white; padding: 6px 14px; border-radius: 9999px; font-size: 0.78rem; font-weight: 900; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 3px 12px var(--accent-red-glow); letter-spacing: 0.5px;">
+                <span class="emoji-animated">📢</span> NUEVA NOVEDAD
+              </span>
+            </div>
+
+            <!-- Título + Ilustración Vectorial -->
+            <div style="margin-top: 16px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: flex-start; gap: 16px;">
+              <div style="flex: 1;">
+                <h2 id="modal-title" style="font-size: 1.9rem; font-weight: 900; line-height: 1.15; color: #0e1118; text-transform: uppercase;">
+                  <!-- Título inyectado por JS -->
+                </h2>
+              </div>
+
+              <!-- Vector Browser Mockup -->
+              <div class="browser-vector">
+                <div class="browser-dots">
+                  <div class="browser-dot" style="background: #ff5f56;"></div>
+                  <div class="browser-dot" style="background: #ffbd2e;"></div>
+                  <div class="browser-dot" style="background: #27c93f;"></div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 6px;">
+                  <div style="width: 30px; height: 30px; border-radius: 50%; background: var(--accent-red); display: flex; align-items: center; justify-content: center; color: white; font-size: 0.8rem; font-weight: bold; box-shadow: 0 2px 6px rgba(255,30,39,0.3);">
+                    👤
+                  </div>
+                  <div style="flex: 1; height: 16px; background: var(--accent-red); border-radius: 4px; display: flex; align-items: center; justify-content: center;">
+                    <span style="font-size: 0.65rem; color: #fff;">🔗</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Imagen opcional de la novedad -->
+            <div id="modal-image-container" class="view-hidden" style="margin-bottom: 20px;">
+              <img id="modal-image" src="" alt="Banner novedad" style="width: 100%; max-height: 250px; object-fit: cover; border-radius: 12px; border: 1px solid #eee;" />
+            </div>
+
+            <!-- Cuerpo formateado del anuncio -->
+            <div id="modal-body-content" style="margin-bottom: 26px;">
+              <!-- Párrafos y viñetas inyectados por JS -->
+            </div>
+
+            <!-- Botones CTA de Acción -->
+            <div style="display: flex; gap: 14px; align-items: center; flex-wrap: wrap; margin-top: 16px;">
+              <a id="modal-cta-link" href="#" target="_blank" class="btn-primary" style="flex: 1; min-width: 220px; padding: 14px 24px; font-size: 0.92rem;">
+                🔗 <span id="modal-cta-text">VER AHORA</span> →
+              </a>
+
+              <button id="modal-comments-toggle-btn" class="btn-secondary" style="flex: 1; min-width: 200px; padding: 14px 22px; font-size: 0.92rem;">
+                💬 COMENTAR NOVEDAD
+              </button>
+            </div>
+
+            <!-- Drawer de Comentarios -->
+            <div id="modal-comments-drawer" class="view-hidden" style="margin-top: 25px; border-top: 2px solid #eef1f6; padding-top: 20px;">
+              <h4 style="font-size: 1.05rem; font-weight: 800; color: #0e1118; margin-bottom: 12px; display: flex; justify-content: space-between;">
+                <span>Hilo de Comentarios</span>
+                <span id="modal-comments-count" style="font-size: 0.82rem; color: #687285; font-weight: 600;">0 mensajes</span>
+              </h4>
+
+              <div id="modal-comments-list" style="max-height: 190px; overflow-y: auto; padding-right: 6px; display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px;">
+                <!-- Comentarios inyectados -->
+              </div>
+
+              <!-- Formulario para dejar comentario -->
+              <form id="modal-comment-form" style="display: flex; flex-direction: column; gap: 8px;">
+                <div style="display: flex; gap: 8px;">
+                  <input id="comment-author-input" type="text" placeholder="Tu alias o nombre" style="flex: 0 0 150px; padding: 10px 12px; border-radius: 10px; border: 1.5px solid #dce2ee; font-size: 0.85rem; outline: none; color: #0e1118; background: #ffffff;" />
+                  <input id="comment-text-input" type="text" required placeholder="Escribe una opinión o consulta..." style="flex: 1; padding: 10px 14px; border-radius: 10px; border: 1.5px solid #dce2ee; font-size: 0.85rem; outline: none; color: #0e1118; background: #ffffff;" />
+                  <button type="submit" class="btn-primary" style="padding: 0 20px; border-radius: 10px; box-shadow: none;" title="Enviar">
+                    ➤
+                  </button>
+                </div>
+              </form>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= VISTA LOGIN ADMIN ================= -->
+      <section id="admin-login-view" class="view-hidden">
+        <div style="display: flex; align-items: center; justify-content: center; min-height: 65vh; padding: 20px;">
+          <div class="card" style="max-width: 420px; width: 100%; padding: 36px; border-radius: 24px; position: relative; overflow: hidden;">
+            <div style="position: absolute; top: -60px; left: 50%; transform: translateX(-50%); width: 180px; height: 180px; background: radial-gradient(circle, rgba(255, 30, 39, 0.25) 0%, transparent 70%); pointer-events: none;"></div>
+
+            <div style="text-align: center; margin-bottom: 28px;">
+              <div style="width: 64px; height: 64px; border-radius: 20px; background: rgba(255, 30, 39, 0.1); border: 1px solid rgba(255, 30, 39, 0.25); display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; font-size: 1.8rem;">
+                🔒
+              </div>
+              <h2 style="font-size: 1.5rem; font-weight: 900; margin-bottom: 6px;">Acceso Administrativo</h2>
+              <p style="color: var(--text-muted); font-size: 0.85rem;">
+                Área restringida para moderadores de HedamPro
+              </p>
+            </div>
+
+            <div id="login-error-box" class="view-hidden" style="background: rgba(255, 30, 39, 0.1); border: 1px solid rgba(255, 30, 39, 0.3); color: #ff4d4d; padding: 12px 14px; border-radius: 10px; font-size: 0.85rem; margin-bottom: 20px; display: flex; align-items: center; gap: 8px;">
+              ⚠️ <span id="login-error-text">Credenciales incorrectas.</span>
+            </div>
+
+            <form id="admin-login-form">
+              <div style="margin-bottom: 16px;">
+                <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: var(--text-muted);">Usuario</label>
+                <input id="login-user" type="text" required placeholder="ej. admin" class="input-field" style="margin-bottom: 0;" />
+              </div>
+
+              <div style="margin-bottom: 24px;">
+                <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: var(--text-muted);">Contraseña</label>
+                <input id="login-pass" type="password" required placeholder="••••••••" class="input-field" style="margin-bottom: 0;" />
+              </div>
+
+              <button type="submit" class="btn-primary" style="width: 100%; padding: 14px; font-size: 0.95rem;">
+                Ingresar al Panel
+              </button>
+            </form>
+
+            <div style="margin-top: 22px; padding: 10px 14px; background: rgba(255, 255, 255, 0.04); border-radius: 10px; font-size: 0.78rem; color: var(--text-muted); text-align: center; border: 1px dashed var(--border-color);">
+              🔐 <strong>Credenciales Oficiales:</strong> Usuario: <code style="color: var(--accent-red);">admin</code> | Clave: <code style="color: var(--accent-red);">hedam2026</code>
+            </div>
+
+            <div style="margin-top: 15px; text-align: center;">
+              <a href="#/" style="font-size: 0.82rem; color: var(--text-muted); text-decoration: underline;">← Volver al sitio público</a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= VISTA PANEL ADMIN DASHBOARD ================= -->
+      <section id="admin-dashboard-view" class="view-hidden">
+        <!-- Barra Superior Admin -->
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; margin-bottom: 28px; border-bottom: 1px solid var(--border-color); padding-bottom: 20px;">
+          <div>
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <h2 style="font-size: 1.8rem; font-weight: 900;">Panel de Control</h2>
+              <span style="background: rgba(255, 30, 39, 0.15); color: var(--accent-red); font-size: 0.75rem; font-weight: 800; padding: 4px 10px; border-radius: 9999px; border: 1px solid rgba(255, 30, 39, 0.3);">
+                MODO ADMIN
+              </span>
+            </div>
+            <p style="color: var(--text-muted); font-size: 0.88rem;">
+              Gestiona novedades vigentes, programa lanzamientos y modera comentarios en vivo.
+            </p>
+          </div>
+
+          <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+            <button id="toggle-new-announcement-form-btn" class="btn-primary" style="padding: 10px 20px; font-size: 0.88rem;">
+              ➕ Nueva Novedad
+            </button>
+
+            <button id="reset-metrics-btn" class="btn-outline" style="padding: 10px 14px; font-size: 0.82rem;" title="Reiniciar contadores">
+              🔄 Poner Métricas a Cero
+            </button>
+
+            <a href="#/" class="btn-outline" style="padding: 10px 14px; font-size: 0.82rem;">
+              👁️ Ver Sitio Web
+            </a>
+
+            <button id="admin-logout-btn" class="btn-outline" style="padding: 10px 16px; color: #ff4d4d; border-color: rgba(255, 77, 77, 0.3);">
+              🚪 Salir
+            </button>
+          </div>
+        </div>
+
+        <!-- 5 Tarjetas de Métricas -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 18px; margin-bottom: 28px;">
+          <div class="card" style="display: flex; align-items: center; gap: 16px;">
+            <div style="padding: 12px; border-radius: 12px; background: rgba(168, 85, 247, 0.1); color: #a855f7; font-size: 1.5rem;">
+              🌐
+            </div>
+            <div>
+              <div id="stat-global-views" style="font-size: 1.6rem; font-weight: 900;">0</div>
+              <div style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">Vistas Web Generales</div>
+            </div>
+          </div>
+
+          <div class="card" style="display: flex; align-items: center; gap: 16px;">
+            <div style="padding: 12px; border-radius: 12px; background: rgba(255, 30, 39, 0.1); color: var(--accent-red); font-size: 1.5rem;">
+              👁️
+            </div>
+            <div>
+              <div id="stat-announcement-views" style="font-size: 1.6rem; font-weight: 900;">0</div>
+              <div style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">Lecturas de Novedades</div>
+            </div>
+          </div>
+
+          <div class="card" style="display: flex; align-items: center; gap: 16px;">
+            <div style="padding: 12px; border-radius: 12px; background: rgba(22, 201, 70, 0.1); color: var(--accent-green); font-size: 1.5rem;">
+              🖱️
+            </div>
+            <div>
+              <div id="stat-total-clicks" style="font-size: 1.6rem; font-weight: 900;">0</div>
+              <div style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">Clics en Enlaces (CTA)</div>
+            </div>
+          </div>
+
+          <div class="card" style="display: flex; align-items: center; gap: 16px;">
+            <div style="padding: 12px; border-radius: 12px; background: rgba(59, 130, 246, 0.1); color: #3b82f6; font-size: 1.5rem;">
+              📈
+            </div>
+            <div>
+              <div id="stat-ctr" style="font-size: 1.6rem; font-weight: 900;">0%</div>
+              <div style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">Tasa de Conversión (CTR)</div>
+            </div>
+          </div>
+
+          <div class="card" style="display: flex; align-items: center; gap: 16px;">
+            <div style="padding: 12px; border-radius: 12px; background: rgba(234, 179, 8, 0.1); color: #eab308; font-size: 1.5rem;">
+              💬
+            </div>
+            <div>
+              <div id="stat-total-comments" style="font-size: 1.6rem; font-weight: 900;">0</div>
+              <div style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">Comentarios de Clientes</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Formulario Crear Novedad -->
+        <div id="admin-create-form-card" class="card mb-4 view-hidden" style="border: 1px solid var(--accent-red);">
+          <h3 style="font-size: 1.3rem; font-weight: 800; margin-bottom: 20px;">
+            ✨ Redactar y Publicar Novedad Oficial
+          </h3>
+          <form id="admin-create-announcement-form">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
+              <div>
+                <label style="display: block; font-weight: 700; font-size: 0.85rem; margin-bottom: 6px;">Título del Anuncio</label>
+                <input id="form-title" type="text" required placeholder="ej. PUBLIQUEN DE LA SIGUIENTE MANERA:" class="input-field" />
+
+                <label style="display: block; font-weight: 700; font-size: 0.85rem; margin-bottom: 6px;">Cuerpo del Mensaje (Soporta ✅ viñetas, ⚠️ alertas)</label>
+                <textarea id="form-content" rows="6" required placeholder="✅ Primer punto clave&#10;✅ Segundo punto&#10;&#10;⚠️ Nota importante de spam..." class="input-field"></textarea>
+
+                <label style="display: block; font-weight: 700; font-size: 0.85rem; margin-bottom: 6px;">Imagen o Banner URL (Opcional)</label>
+                <input id="form-image" type="url" placeholder="https://..." class="input-field" />
+              </div>
+
+              <div>
+                <label style="display: block; font-weight: 700; font-size: 0.85rem; margin-bottom: 6px;">Texto del Botón Principal (CTA)</label>
+                <input id="form-cta-text" type="text" placeholder="ej. VER HEDAMPRO.COM" class="input-field" />
+
+                <label style="display: block; font-weight: 700; font-size: 0.85rem; margin-bottom: 6px;">Enlace URL de Destino</label>
+                <input id="form-cta-url" type="url" placeholder="https://hedampro.com" class="input-field" />
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+                  <div>
+                    <label style="display: block; font-weight: 700; font-size: 0.85rem; margin-bottom: 6px;">Fecha de Publicación</label>
+                    <input id="form-published-at" type="datetime-local" required class="input-field" />
+                  </div>
+                  <div>
+                    <label style="display: block; font-weight: 700; font-size: 0.85rem; margin-bottom: 6px;">Caducidad (Fin Pop-up)</label>
+                    <input id="form-expires-at" type="datetime-local" class="input-field" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div style="display: flex; gap: 12px; margin-top: 16px;">
+              <button type="submit" class="btn-primary">
+                ✓ Publicar Anuncio
+              </button>
+              <button type="button" id="form-cancel-btn" class="btn-outline">
+                Cancelar
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Tabla de Novedades -->
+        <div class="card">
+          <h3 style="font-size: 1.25rem; font-weight: 800; margin-bottom: 20px;">
+            Gestión de Publicaciones y Moderación
+          </h3>
+
+          <div style="overflow-x: auto;">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>TÍTULO DE LA NOVEDAD</th>
+                  <th>ESTADO</th>
+                  <th>VISTAS NOVEDAD</th>
+                  <th>CLICS CTA</th>
+                  <th>COMUNIDAD</th>
+                  <th>ACCIONES</th>
+                </tr>
+              </thead>
+              <tbody id="admin-table-body">
+                <!-- Filas inyectadas por JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Panel de Moderación de Chat -->
+        <div id="admin-chat-moderation-drawer" class="card mt-4 view-hidden" style="border: 1px solid var(--accent-red);">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <h4 style="font-size: 1.15rem; font-weight: 800;">
+              Hilo de Comentarios y Respuestas Oficiales (<span id="moderation-announcement-title"></span>)
+            </h4>
+            <button id="close-moderation-btn" class="btn-outline" style="padding: 4px 10px;">
+              Cerrar Hilo
+            </button>
+          </div>
+
+          <div id="moderation-comments-list" style="max-height: 260px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px;">
+            <!-- Comentarios inyectados -->
+          </div>
+
+          <form id="admin-reply-form" style="display: flex; gap: 10px;">
+            <input id="admin-reply-input" type="text" required placeholder="Responder a la comunidad como Administrador Oficial..." class="input-field" style="margin: 0;" />
+            <button type="submit" class="btn-primary" style="padding: 0 20px; border-radius: 10px;">
+              ➤ Responder
+            </button>
+          </form>
+        </div>
+
+      </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <div class="footer-inner">
+        <span>© 2026 HEDAMPRO. Todos los derechos reservados. Plataforma oficial de anuncios y streaming.</span>
+      </div>
+    </footer>
+  </div>
+</body>
 </html>
