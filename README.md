@@ -1,32 +1,32 @@
-# React + TypeScript + Vite
+# HEDAMPRO - Módulo de Novedades y Anuncios
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Módulo interactivo oficial de Novedades y Comunicados de **HEDAMPRO** con roles divididos (Administrador y Cliente), modo oscuro y claro, sistema de pop-ups inmersivo, y métricas en tiempo real.
 
-Currently, two official plugins are available:
+## Características
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- **Diseño Inmersivo y Responsivo**: Estilo oscuro con acentos rojos, mascota interactiva de HedamPro peeking y alternador de tema claro/oscuro.
+- **Pop-up Principal con Control de Sesión**: Salta automáticamente en primer plano con soporte para checklists, alertas y botón de llamada a la acción (CTA).
+- **Muro / Feed de Anuncios**: Vista de exploración con historial de publicaciones anteriores.
+- **Panel de Administración Protegido**: Acceso con credenciales para moderadores (`admin`), creación y programación de publicaciones.
+- **Métricas en Tiempo Real**: Conteo dual de vistas web globales, lecturas de novedades y clics en enlaces (CTA).
+- **Interacción de la Comunidad**: Hilo de comentarios con moderación y respuestas oficiales del administrador.
 
-## React Compiler
+## Tecnologías
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- [React](https://react.dev/) + [TypeScript](https://www.typescriptlang.org/)
+- [Vite](https://vitejs.dev/)
+- Vanilla CSS con diseño adaptativo y variables CSS
+- [Lucide React](https://lucide.dev/) (Iconografía)
 
-## Expanding the Oxlint configuration
+## Instalación y Ejecución
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
+```bash
+# Instalar dependencias
+npm install
 
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+# Iniciar servidor de desarrollo
+npm run dev
+
+# Compilar para producción
+npm run build
 ```
-
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
