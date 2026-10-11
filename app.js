@@ -4,6 +4,46 @@
  */
 
 document.addEventListener('DOMContentLoaded', () => {
+  // ================= SISTEMA DE ICONOS VECTORIALES (LUCIDE MINIMALISTAS) =================
+  const ICONS = {
+    'megaphone': `<path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/>`,
+    'sparkles': `<path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/>`,
+    'check-circle-2': `<circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/>`,
+    'check-circle': `<circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/>`,
+    'alert-triangle': `<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>`,
+    'external-link': `<path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>`,
+    'arrow-right': `<path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>`,
+    'arrow-left': `<path d="m12 19-7-7 7-7"/><path d="M19 12H5"/>`,
+    'message-square': `<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>`,
+    'send': `<path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/>`,
+    'x': `<path d="M18 6 6 18"/><path d="m6 6 12 12"/>`,
+    'lock': `<rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>`,
+    'user': `<path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>`,
+    'shield-check': `<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/>`,
+    'plus-circle': `<circle cx="12" cy="12" r="10"/><path d="M8 12h8"/><path d="M12 8v8"/>`,
+    'rotate-ccw': `<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>`,
+    'eye': `<path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>`,
+    'log-out': `<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/>`,
+    'globe': `<circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/>`,
+    'mouse-pointer-click': `<path d="m9 9 5 12 1.8-5.2L21 14Z"/><path d="M7.2 2.2 8 5.1"/><path d="m5.1 8-2.9-.8"/><path d="M14 4.1 12 6"/><path d="m6 12-1.9 2"/>`,
+    'trending-up': `<polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/>`,
+    'trash-2': `<path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/>`,
+    'calendar': `<rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/>`,
+    'link': `<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>`
+  };
+
+  function renderIcon(name, options = {}) {
+    const iconPaths = ICONS[name];
+    if (!iconPaths) return '';
+    const size = options.size || 18;
+    const strokeWidth = options.strokeWidth || 2;
+    const color = options.color || 'currentColor';
+    const className = options.className ? `vector-icon ${options.className}` : 'vector-icon';
+    const extraStyle = options.style ? ` style="${options.style}"` : '';
+
+    return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="${strokeWidth}" stroke-linecap="round" stroke-linejoin="round" class="${className}"${extraStyle}>${iconPaths}</svg>`;
+  }
+
   // ================= CLAVES DE ALMACENAMIENTO =================
   const STORAGE_KEYS = {
     ANNOUNCEMENTS: 'hedam_announcements',
@@ -193,8 +233,10 @@ document.addEventListener('DOMContentLoaded', () => {
       openPopupBtnContainer.classList.add('view-hidden');
       feedContainer.innerHTML = `
         <div class="card" style="text-align: center; padding: 60px 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px;">
-          <div style="width: 64px; height: 64px; border-radius: 50%; background: rgba(255, 30, 39, 0.1); display: flex; align-items: center; justify-content: center; font-size: 1.8rem; color: var(--accent-red);">
-            📢
+          <div style="width: 64px; height: 64px; border-radius: 50%; background: rgba(255, 30, 39, 0.1); display: flex; align-items: center; justify-content: center; color: var(--accent-red);">
+            <span class="vector-icon-wrap anim-shake">
+              ${renderIcon('megaphone', { size: 30, color: 'var(--accent-red)' })}
+            </span>
           </div>
           <h3 style="font-size: 1.35rem; font-weight: 800;">Aún no hay novedades publicadas</h3>
           <p style="color: var(--text-muted); max-width: 450px; font-size: 0.92rem;">
@@ -217,15 +259,19 @@ document.addEventListener('DOMContentLoaded', () => {
       const formattedDate = new Date(announcement.publishedAt).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
 
       html += `
-        <div class="card" style="cursor: pointer; position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between;" onclick="window.hedamApp.openModal('${announcement.id}')">
+        <div class="card action-hover-trigger" style="cursor: pointer; position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between;" onclick="window.hedamApp.openModal('${announcement.id}')">
           ${index === 0 ? `
-            <div style="position: absolute; top: 14px; right: 14px; background: var(--accent-red); color: white; font-size: 0.68rem; font-weight: 800; padding: 3px 9px; border-radius: 9999px; text-transform: uppercase; letter-spacing: 0.5px;">
-              Destacado
+            <div style="position: absolute; top: 14px; right: 14px; background: var(--accent-red); color: white; font-size: 0.68rem; font-weight: 800; padding: 3px 9px; border-radius: 9999px; text-transform: uppercase; letter-spacing: 0.5px; display: inline-flex; align-items: center; gap: 4px;">
+              <span class="vector-icon-wrap anim-sparkle">
+                ${renderIcon('sparkles', { size: 11, color: '#fff' })}
+              </span>
+              <span>Destacado</span>
             </div>` : ''}
 
           <div>
-            <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 8px; font-weight: 600;">
-              ${formattedDate}
+            <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 8px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px;">
+              ${renderIcon('calendar', { size: 13, color: 'var(--text-muted)' })}
+              <span>${formattedDate}</span>
             </div>
             <h3 style="font-size: 1.22rem; font-weight: 800; color: var(--text-main); margin-bottom: 12px; line-height: 1.3;">
               ${escapeHTML(announcement.title)}
@@ -236,11 +282,15 @@ document.addEventListener('DOMContentLoaded', () => {
           </div>
 
           <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-color); padding-top: 14px; font-size: 0.84rem; color: var(--text-muted);">
-            <span style="display: flex; align-items: center; gap: 5px;">
-              💬 ${commentsCount} comentarios
+            <span style="display: inline-flex; align-items: center; gap: 6px;">
+              ${renderIcon('message-square', { size: 14, className: 'vector-hover-bounce' })}
+              <span>${commentsCount} comentarios</span>
             </span>
-            <span style="color: var(--accent-red); font-weight: 700; display: flex; align-items: center; gap: 4px;">
-              Ver detalle →
+            <span style="color: var(--accent-red); font-weight: 700; display: inline-flex; align-items: center; gap: 5px;">
+              <span>Ver detalle</span>
+              <span class="vector-icon-wrap vector-hover-slide">
+                ${renderIcon('arrow-right', { size: 14, color: 'var(--accent-red)' })}
+              </span>
             </span>
           </div>
         </div>`;
@@ -305,7 +355,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     modalCommentsDrawer.classList.add('view-hidden');
-    modalCommentsToggleBtn.textContent = '💬 COMENTAR NOVEDAD';
+    updateModalCommentsToggleBtn(false);
 
     renderModalComments();
     modalOverlay.classList.remove('view-hidden');
@@ -321,6 +371,16 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   if (modalOverlay) {
     modalOverlay.addEventListener('click', closeAnnouncementModal);
+  }
+
+  function updateModalCommentsToggleBtn(isOpen) {
+    if (!modalCommentsToggleBtn) return;
+    modalCommentsToggleBtn.innerHTML = `
+      <span class="vector-icon-wrap vector-hover-bounce">
+        ${renderIcon('message-square', { size: 16 })}
+      </span>
+      <span id="modal-comments-toggle-text">${isOpen ? 'OCULTAR CHAT' : 'COMENTAR NOVEDAD'}</span>
+    `;
   }
 
   // Formateador de texto inteligente
@@ -343,7 +403,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         output += `
           <div class="checklist-item">
-            <span class="checklist-icon">✔</span>
+            <span class="checklist-icon">
+              ${renderIcon('check-circle-2', { size: 18, strokeWidth: 2.5, color: '#11a842' })}
+            </span>
             <span class="checklist-text">${text}</span>
           </div>`;
         return;
@@ -354,7 +416,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const text = trimmed.replace(/^⚠️\s*/, '');
         output += `
           <div class="alert-warning">
-            <span style="font-size: 1.1rem;">⚠️</span>
+            <span class="alert-warning-icon anim-pulse">
+              ${renderIcon('alert-triangle', { size: 20, strokeWidth: 2.2, color: '#f59e0b' })}
+            </span>
             <span>${escapeHTML(text)}</span>
           </div>`;
         return;
@@ -373,10 +437,10 @@ document.addEventListener('DOMContentLoaded', () => {
       state.showCommentsDrawer = !state.showCommentsDrawer;
       if (state.showCommentsDrawer) {
         modalCommentsDrawer.classList.remove('view-hidden');
-        modalCommentsToggleBtn.textContent = '💬 OCULTAR CHAT';
+        updateModalCommentsToggleBtn(true);
       } else {
         modalCommentsDrawer.classList.add('view-hidden');
-        modalCommentsToggleBtn.textContent = '💬 COMENTAR NOVEDAD';
+        updateModalCommentsToggleBtn(false);
       }
     });
   }
@@ -492,8 +556,13 @@ document.addEventListener('DOMContentLoaded', () => {
     if (state.announcements.length === 0) {
       tableBody.innerHTML = `
         <tr>
-          <td colspan="6" style="padding: 36px; text-align: center; color: var(--text-muted);">
-            No hay novedades publicadas aún. Haz clic en <strong>"➕ Nueva Novedad"</strong> para publicar la primera.
+          <td colspan="6" style="padding: 42px 20px; text-align: center; color: var(--text-muted);">
+            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;">
+              <span class="vector-icon-wrap anim-sparkle" style="color: var(--accent-red);">
+                ${renderIcon('sparkles', { size: 28 })}
+              </span>
+              <span>No hay novedades publicadas aún. Haz clic en <strong>"Nueva Novedad"</strong> para publicar la primera.</span>
+            </div>
           </td>
         </tr>`;
     } else {
@@ -506,31 +575,45 @@ document.addEventListener('DOMContentLoaded', () => {
           <tr>
             <td style="font-weight: 700;">
               <div>${escapeHTML(a.title)}</div>
-              <div style="font-size: 0.78rem; color: var(--text-muted); font-weight: 400;">${dateStr}</div>
+              <div style="font-size: 0.78rem; color: var(--text-muted); font-weight: 400; display: inline-flex; align-items: center; gap: 5px; margin-top: 3px;">
+                ${renderIcon('calendar', { size: 12, color: 'var(--text-muted)' })}
+                <span>${dateStr}</span>
+              </div>
             </td>
             <td>
-              <span style="padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; background: ${a.status === 'published' ? 'rgba(22, 201, 70, 0.15)' : 'rgba(255, 255, 255, 0.08)'}; color: ${a.status === 'published' ? 'var(--accent-green)' : 'var(--text-muted)'};">
+              <span style="padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; background: ${a.status === 'published' ? 'rgba(22, 201, 70, 0.15)' : 'rgba(255, 255, 255, 0.08)'}; color: ${a.status === 'published' ? 'var(--accent-green)' : 'var(--text-muted)'}; display: inline-flex; align-items: center; gap: 5px;">
+                ${a.status === 'published' ? renderIcon('check-circle', { size: 12, color: 'var(--accent-green)' }) : ''}
                 ${a.status.toUpperCase()}
               </span>
             </td>
             <td>
-              👁️ ${a.views || 0}
+              <span style="display: inline-flex; align-items: center; gap: 6px;">
+                ${renderIcon('eye', { size: 15, color: 'var(--accent-red)' })}
+                <span>${a.views || 0}</span>
+              </span>
             </td>
             <td>
-              🖱️ ${a.clicks || 0}
+              <span style="display: inline-flex; align-items: center; gap: 6px;">
+                ${renderIcon('mouse-pointer-click', { size: 15, color: 'var(--accent-green)' })}
+                <span>${a.clicks || 0}</span>
+              </span>
             </td>
             <td>
-              <button class="btn-outline" style="padding: 4px 10px; font-size: 0.8rem;" onclick="window.hedamApp.openModeration('${a.id}')">
-                💬 ${itemComments.length} mensajes
+              <button class="btn-outline" style="padding: 4px 10px; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 6px;" onclick="window.hedamApp.openModeration('${a.id}')">
+                ${renderIcon('message-square', { size: 14 })}
+                <span>${itemComments.length} mensajes</span>
               </button>
             </td>
             <td>
               <div style="display: flex; align-items: center; gap: 10px;">
-                <button style="background: none; color: var(--accent-red); font-weight: 700; font-size: 0.85rem;" onclick="window.hedamApp.openModeration('${a.id}')">
-                  Moderar Chat →
+                <button class="action-hover-trigger" style="background: none; border: none; cursor: pointer; color: var(--accent-red); font-weight: 700; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 5px;" onclick="window.hedamApp.openModeration('${a.id}')">
+                  <span>Moderar Chat</span>
+                  <span class="vector-icon-wrap vector-hover-slide">
+                    ${renderIcon('arrow-right', { size: 13, color: 'var(--accent-red)' })}
+                  </span>
                 </button>
-                <button title="Eliminar novedad" style="background: none; color: var(--text-muted); font-size: 1rem;" onclick="window.hedamApp.deleteAnnouncement('${a.id}')" onmouseenter="this.style.color='#ff4d4d'" onmouseleave="this.style.color='var(--text-muted)'">
-                  🗑️
+                <button class="btn-icon-danger" title="Eliminar novedad" onclick="window.hedamApp.deleteAnnouncement('${a.id}')">
+                  ${renderIcon('trash-2', { size: 16 })}
                 </button>
               </div>
             </td>
@@ -660,15 +743,22 @@ document.addEventListener('DOMContentLoaded', () => {
         <div style="padding: 12px 16px; border-radius: 12px; background: ${isOfficial ? 'rgba(255, 30, 39, 0.08)' : 'var(--input-bg)'}; border: ${isOfficial ? '1px solid rgba(255, 30, 39, 0.3)' : '1px solid var(--border-color)'}; display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;">
           <div style="flex: 1;">
             <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
-              <strong style="font-size: 0.88rem; color: ${isOfficial ? 'var(--accent-red)' : 'var(--text-main)'};">
-                ${escapeHTML(c.userName)}
-              </strong>
+              ${isOfficial ? `
+                <strong style="font-size: 0.88rem; color: var(--accent-red); display: inline-flex; align-items: center; gap: 6px;">
+                  <span class="vector-icon-wrap">${renderIcon('shield-check', { size: 14, color: 'var(--accent-red)' })}</span>
+                  <span>${escapeHTML(c.userName.replace(/^🛡️\s*/, ''))}</span>
+                </strong>
+              ` : `
+                <strong style="font-size: 0.88rem; color: var(--text-main);">
+                  ${escapeHTML(c.userName)}
+                </strong>
+              `}
               <span style="font-size: 0.75rem; color: var(--text-muted);">${timeStr}</span>
             </div>
             <p style="margin: 0; font-size: 0.92rem;">${escapeHTML(c.content)}</p>
           </div>
-          <button title="Eliminar comentario" style="background: none; color: var(--text-muted); font-size: 0.9rem;" onclick="window.hedamApp.deleteComment('${c.id}')" onmouseenter="this.style.color='#ff4d4d'" onmouseleave="this.style.color='var(--text-muted)'">
-            🗑️
+          <button class="btn-icon-danger" title="Eliminar comentario" onclick="window.hedamApp.deleteComment('${c.id}')">
+            ${renderIcon('trash-2', { size: 15 })}
           </button>
         </div>`;
     });
@@ -694,7 +784,7 @@ document.addEventListener('DOMContentLoaded', () => {
         id: 'comm_' + Date.now().toString(36) + Math.random().toString(36).substring(2, 6),
         announcementId: state.selectedModerationId,
         userId: 'admin_official',
-        userName: '🛡️ Soporte HedamPro (Admin)',
+        userName: 'Soporte HedamPro (Admin)',
         content: reply,
         createdAt: new Date().toISOString()
       };

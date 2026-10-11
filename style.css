@@ -414,15 +414,143 @@ button {
   pointer-events: none;
 }
 
-/* Animated megaphones */
-@keyframes shake {
-  0%, 100% { transform: rotate(0deg); }
-  25% { transform: rotate(-12deg); }
-  75% { transform: rotate(12deg); }
+/* ================= EMOJIS Y ARTE VECTORIAL ANIMADO MINIMALISTA ================= */
+.vector-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+  flex-shrink: 0;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), stroke 0.2s, color 0.2s;
 }
-.emoji-animated {
-  display: inline-block;
-  animation: shake 2.5s infinite ease-in-out;
+
+.vector-icon-wrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* Keyframes de animación continua */
+@keyframes vector-shake {
+  0%, 100% { transform: rotate(0deg); }
+  15% { transform: rotate(-14deg) scale(1.06); }
+  30% { transform: rotate(14deg) scale(1.06); }
+  45% { transform: rotate(-8deg); }
+  60% { transform: rotate(8deg); }
+  75% { transform: rotate(0deg); }
+}
+
+@keyframes vector-sparkle {
+  0%, 100% { transform: scale(1) rotate(0deg); opacity: 0.9; }
+  50% { transform: scale(1.22) rotate(16deg); opacity: 1; filter: drop-shadow(0 0 6px var(--accent-red-glow)); }
+}
+
+@keyframes vector-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.12); }
+}
+
+@keyframes vector-spin-slow {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes vector-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+@keyframes vector-tap {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  30% { transform: translate(1px, 2px) scale(0.92); }
+  60% { transform: translate(-1px, -1px) scale(1.06); }
+}
+
+@keyframes vector-bounce {
+  0%, 100% { transform: translateY(0); }
+  40% { transform: translateY(-4px); }
+  70% { transform: translateY(1px); }
+}
+
+/* Clases de animación activa */
+.emoji-animated,
+.anim-shake {
+  display: inline-flex;
+  animation: vector-shake 2.4s infinite ease-in-out;
+  transform-origin: bottom center;
+}
+
+.anim-sparkle,
+.anim-twinkle {
+  display: inline-flex;
+  animation: vector-sparkle 2.6s infinite ease-in-out;
+}
+
+.anim-pulse {
+  display: inline-flex;
+  animation: vector-pulse 2.2s infinite ease-in-out;
+}
+
+.anim-spin-slow {
+  display: inline-flex;
+  animation: vector-spin-slow 16s infinite linear;
+}
+
+.anim-float {
+  display: inline-flex;
+  animation: vector-float 2.6s infinite ease-in-out;
+}
+
+.anim-tap {
+  display: inline-flex;
+  animation: vector-tap 2.2s infinite ease-in-out;
+}
+
+.anim-bounce {
+  display: inline-flex;
+  animation: vector-bounce 2.2s infinite ease-in-out;
+}
+
+/* Micro-animaciones en interacciones Hover */
+.btn-primary:hover .vector-hover-slide,
+.btn-secondary:hover .vector-hover-slide,
+.btn-outline:hover .vector-hover-slide,
+.action-hover-trigger:hover .vector-hover-slide {
+  transform: translateX(4px);
+}
+
+.btn-primary:hover .vector-hover-spin,
+.btn-secondary:hover .vector-hover-spin,
+.btn-outline:hover .vector-hover-spin,
+.action-hover-trigger:hover .vector-hover-spin {
+  transform: rotate(180deg);
+}
+
+.btn-primary:hover .vector-hover-bounce,
+.btn-secondary:hover .vector-hover-bounce,
+.btn-outline:hover .vector-hover-bounce,
+.action-hover-trigger:hover .vector-hover-bounce {
+  transform: translateY(-3px) scale(1.1);
+}
+
+.btn-icon-danger {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 8px;
+  color: var(--text-muted);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s, background-color 0.2s, transform 0.2s;
+}
+
+.btn-icon-danger:hover {
+  color: #ff4d4d !important;
+  background: rgba(255, 77, 77, 0.12);
+  transform: scale(1.16) rotate(6deg);
 }
 
 /* Visibility Utility */
@@ -458,17 +586,29 @@ button {
   display: flex;
   align-items: flex-start;
   gap: 10px;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
+  transition: transform 0.2s ease;
+}
+.checklist-item:hover {
+  transform: translateX(3px);
 }
 .checklist-icon {
   color: #11a842;
   flex-shrink: 0;
-  margin-top: 3px;
+  margin-top: 2px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.checklist-item:hover .checklist-icon {
+  transform: scale(1.22);
 }
 .checklist-text {
   font-size: 0.98rem;
   font-weight: 600;
   color: #1c2230;
+  line-height: 1.45;
 }
 
 /* Warning alert */
@@ -477,13 +617,26 @@ button {
   background: #fff9e6;
   border-left: 4px solid #f59e0b;
   padding: 12px 16px;
-  border-radius: 8px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   color: #92400e;
   font-weight: 700;
   font-size: 0.92rem;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.08);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.alert-warning:hover {
+  transform: translateX(4px);
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.16);
+}
+.alert-warning-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: #f59e0b;
 }
 
 /* Admin Table */
