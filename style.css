@@ -59,6 +59,11 @@
   padding: 0;
 }
 
+html, body {
+  overflow-x: hidden;
+  width: 100%;
+}
+
 body {
   background-color: var(--bg-color);
   background-image: var(--bg-radial);
@@ -189,41 +194,64 @@ button {
 .mt-4 { margin-top: 16px; }
 .mb-4 { margin-bottom: 16px; }
 
-/* Modal Overlay */
+/* Modal Overlay - Glassmorphism Premium */
 .modal-overlay {
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
-  background-color: rgba(0, 0, 0, 0.85);
-  backdrop-filter: blur(10px);
+  background-color: rgba(6, 8, 14, 0.78);
+  backdrop-filter: blur(18px) saturate(180%);
+  -webkit-backdrop-filter: blur(18px) saturate(180%);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  padding: 80px 24px 30px;
+  padding: 20px 16px;
   overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
   animation: fadeIn 0.25s ease-out;
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+/* Bloqueo total de scroll de la página de fondo cuando cualquier modal esté activo */
+body.modal-open {
+  overflow: hidden !important;
+  height: 100vh !important;
+  touch-action: none !important;
 }
 
 /* Modal Content Card */
 .modal-content {
-  background: var(--modal-bg);
-  color: var(--modal-text);
+  background: #ffffff;
+  color: #0e1118;
   border-radius: 26px;
   width: 100%;
-  max-width: 650px;
-  max-height: 85vh;
+  max-width: 620px;
+  max-height: 88vh;
   position: relative;
-  box-shadow: var(--modal-shadow);
+  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.85), 0 0 35px rgba(255, 30, 39, 0.35);
   animation: modalPop 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-  border: 4px solid var(--modal-border);
-  margin-top: 30px;
+  border: 3.5px solid var(--accent-red);
+  margin: auto;
   display: flex;
   flex-direction: column;
+}
+
+.modal-inner-scroll {
+  padding: 36px 36px 32px;
+  overflow-y: auto;
+  max-height: calc(90vh - 12px);
+  border-radius: 22px;
+}
+
+.modal-inner-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+.modal-inner-scroll::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 10px;
+}
+.modal-inner-scroll::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-red);
 }
 
 @keyframes modalPop {
@@ -243,9 +271,9 @@ button {
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 30;
+  z-index: 40;
   border: 2px solid #2a2e3d;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
   cursor: pointer;
   transition: var(--transition);
 }
@@ -255,25 +283,27 @@ button {
   border-color: var(--accent-red);
 }
 
-/* Mascot Peeking Over Top - Positioned to physically GRAB the red border */
+/* Mascot Peeking Over Top - Holding on the Red Border */
 .mascot-container {
   position: absolute;
-  top: -82px; /* Altura calibrada para reposar sobre el marco rojo */
+  top: -85px;
   left: 50%;
   transform: translateX(-50%);
-  width: 185px;
-  height: 112px;
+  width: 175px;
+  height: 110px;
   pointer-events: none;
-  z-index: 25;
+  z-index: 35;
   display: flex;
   justify-content: center;
+  align-items: flex-end;
 }
 
 .mascot-container img {
   width: 100%;
   height: 100%;
   object-fit: contain;
-  filter: drop-shadow(0 10px 12px rgba(0, 0, 0, 0.5));
+  object-position: bottom center;
+  filter: drop-shadow(0 10px 14px rgba(0, 0, 0, 0.55));
   animation: mascotPeek 0.6s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -656,4 +686,826 @@ button {
 .admin-table td {
   padding: 14px;
   border-bottom: 1px solid var(--border-color);
+}
+
+/* ================= NUEVO DISEÑO: LAYOUT DIVIDIDO (LATERAL IZQUIERDO + LECTOR) ================= */
+.client-layout-container {
+  display: flex;
+  gap: 28px;
+  align-items: flex-start;
+  width: 100%;
+  position: relative;
+  box-sizing: border-box;
+}
+
+/* Lateral Izquierdo: Lista scrollable de novedades */
+.announcements-sidebar {
+  width: 360px;
+  max-width: 400px;
+  box-sizing: border-box;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.sidebar-header-box {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 16px 18px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: var(--card-shadow);
+}
+
+.sidebar-header-title {
+  font-size: 0.95rem;
+  font-weight: 900;
+  color: var(--text-main);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sidebar-count-badge {
+  background: rgba(255, 30, 39, 0.12);
+  color: var(--accent-red);
+  font-size: 0.76rem;
+  font-weight: 800;
+  padding: 4px 9px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 30, 39, 0.25);
+}
+
+.sidebar-scroll-container {
+  max-height: calc(100vh - 240px);
+  min-height: 480px;
+  overflow-y: auto;
+  padding-right: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Scrollbar personalizada */
+.sidebar-scroll-container::-webkit-scrollbar {
+  width: 5px;
+}
+.sidebar-scroll-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+.sidebar-scroll-container::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 10px;
+}
+.sidebar-scroll-container::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-red);
+}
+
+/* Tarjeta individual en el lateral */
+.sidebar-item-card {
+  background: var(--bg-card);
+  border: 1.5px solid var(--border-color);
+  border-radius: 16px;
+  padding: 16px 18px;
+  cursor: pointer;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  position: relative;
+  overflow: hidden;
+}
+
+.sidebar-item-card:hover {
+  border-color: rgba(255, 30, 39, 0.5);
+  background: var(--bg-card-hover);
+  transform: translateX(4px);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.25);
+}
+
+.sidebar-item-card.sidebar-item-active {
+  border-color: var(--accent-red);
+  background: var(--bg-card-hover);
+  box-shadow: 0 6px 24px rgba(255, 30, 39, 0.18), inset 3px 0 0 var(--accent-red);
+}
+
+.sidebar-item-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.sidebar-item-title {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--text-main);
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.sidebar-item-excerpt {
+  color: var(--text-muted);
+  font-size: 0.84rem;
+  line-height: 1.45;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.sidebar-item-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  border-top: 1px solid var(--border-color);
+  padding-top: 10px;
+  margin-top: 2px;
+}
+
+/* Badges */
+.badge-pinned {
+  background: rgba(255, 30, 39, 0.14);
+  color: var(--accent-red);
+  border: 1px solid rgba(255, 30, 39, 0.35);
+  padding: 3px 8px;
+  border-radius: 9999px;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  text-transform: uppercase;
+}
+
+.badge-views {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+/* Lector Principal de la Novedad (Llena el resto de la pantalla) */
+.announcement-main-viewer {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.viewer-card {
+  background: #ffffff;
+  color: #0e1118;
+  border-radius: 26px;
+  border: 3.5px solid var(--accent-red);
+  box-shadow: 0 16px 50px rgba(0, 0, 0, 0.35), 0 0 30px rgba(255, 30, 39, 0.15);
+  padding: 36px 36px 32px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Comentarios: Fondos 100% Sólidos y Opacos (Nunca Transparentes) */
+.comment-card-user {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 12px 16px;
+  color: #1e293b;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+}
+
+.comment-card-admin {
+  background: #fff1f2 !important; /* Fondo rosa/rojo suave 100% sólido y opaco */
+  border: 1.5px solid #ffccd0 !important;
+  border-radius: 12px;
+  padding: 12px 16px;
+  color: #0f172a !important;
+  box-shadow: 0 2px 8px rgba(255, 30, 39, 0.08);
+}
+
+.admin-comment-mascot {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+  border-radius: 50%;
+  background: #ffffff;
+  padding: 2px;
+  border: 1.5px solid var(--accent-red);
+  box-shadow: 0 1px 4px rgba(255, 30, 39, 0.3);
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.comment-admin-author {
+  font-weight: 800;
+  font-size: 0.86rem;
+  color: var(--accent-red);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Botones de ayuda para insertar iconos animados en panel Admin */
+.btn-tag-helper {
+  padding: 6px 12px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  border-radius: 8px;
+  cursor: pointer;
+  background: var(--bg-card);
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.btn-tag-helper:hover {
+  border-color: var(--accent-red);
+  background: rgba(255, 30, 39, 0.1);
+  color: var(--accent-red);
+  transform: translateY(-1px);
+}
+
+/* Botón Pin en Dashboard */
+.btn-pin-active {
+  background: rgba(255, 30, 39, 0.15) !important;
+  border: 1px solid var(--accent-red) !important;
+  color: var(--accent-red) !important;
+  font-weight: 800;
+}
+
+/* ================= BOTONES DEL HEADER Y SEPARACIÓN ================= */
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px; /* Separación amplia y limpia entre botones */
+}
+
+.pwa-install-btn {
+  cursor: pointer;
+  transition: var(--transition);
+  padding: 8px 16px;
+  border-radius: 9999px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+.pwa-install-btn:hover {
+  border-color: var(--accent-red);
+  background: rgba(255, 30, 39, 0.08);
+  transform: translateY(-2px);
+}
+
+#notification-header-btn {
+  padding: 8px 12px;
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition);
+}
+#notification-header-btn:hover {
+  border-color: var(--accent-green);
+  background: rgba(22, 201, 70, 0.08);
+  transform: translateY(-2px);
+}
+
+#user-profile-header-btn {
+  padding: 8px 12px;
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition);
+}
+#user-profile-header-btn:hover {
+  border-color: var(--accent-red);
+  background: rgba(255, 30, 39, 0.08);
+  transform: translateY(-2px);
+}
+
+/* Toast Notificaciones Flotante */
+.hedam-toast-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.hedam-toast-inner {
+  background: var(--bg-card);
+  border: 1px solid var(--accent-red);
+  color: var(--text-main);
+  padding: 12px 20px;
+  border-radius: 9999px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  font-size: 0.88rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  backdrop-filter: blur(12px);
+}
+
+/* ================= MODAL TUTORIAL NOTIFICACIONES (MUÑECA ROSADA) ================= */
+#notif-tutorial-modal {
+  z-index: 10050 !important;
+  padding: 24px 20px !important;
+}
+
+.notif-tutorial-card {
+  background: #ffffff;
+  color: #0e1118;
+  border-radius: 28px;
+  width: 100%;
+  max-width: 490px;
+  position: relative;
+  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.85), 0 0 45px rgba(255, 30, 39, 0.4);
+  animation: modalPop 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  border: 3px solid var(--accent-red);
+  padding: 34px 28px 24px;
+  text-align: center;
+  margin: 0 auto;
+}
+
+[data-theme="dark"] .notif-tutorial-card {
+  background: #11131a;
+  color: #ffffff;
+  border-color: rgba(255, 30, 39, 0.85);
+}
+
+.notif-mascot-container {
+  position: absolute;
+  left: -155px;
+  bottom: -6px;
+  width: 165px;
+  height: 420px;
+  max-height: 98%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.notif-mascot-img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 15px 25px rgba(0, 0, 0, 0.6)) drop-shadow(0 0 14px rgba(255, 30, 39, 0.35));
+}
+
+@media (max-width: 840px) {
+  .notif-mascot-container {
+    left: -115px;
+    width: 130px;
+    height: 350px;
+  }
+}
+
+@media (max-width: 640px) {
+  .notif-mascot-container {
+    left: -15px;
+    bottom: -6px;
+    width: 85px;
+    height: 200px;
+    opacity: 0.95;
+  }
+}
+
+.badge-notif-pill {
+  background: rgba(255, 30, 39, 0.1);
+  border: 1px solid rgba(255, 30, 39, 0.3);
+  color: var(--accent-red);
+  padding: 5px 14px;
+  border-radius: 9999px;
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.notif-title {
+  font-size: 1.45rem;
+  font-weight: 900;
+  line-height: 1.25;
+  margin-bottom: 8px;
+}
+
+.notif-subtitle {
+  font-size: 0.88rem;
+  color: #64748b;
+  line-height: 1.45;
+  margin-bottom: 20px;
+}
+
+[data-theme="dark"] .notif-subtitle {
+  color: #94a3b8;
+}
+
+.notif-steps-box {
+  background: #f8fafc;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 18px;
+  padding: 16px 18px;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 22px;
+}
+
+[data-theme="dark"] .notif-steps-box {
+  background: #171b26;
+  border-color: #272f42;
+}
+
+.notif-step-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.notif-step-number {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--accent-red);
+  color: white;
+  font-size: 0.78rem;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px var(--accent-red-glow);
+}
+
+.notif-step-text {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #1e293b;
+  line-height: 1.35;
+}
+
+[data-theme="dark"] .notif-step-text {
+  color: #e2e8f0;
+}
+
+.notif-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.notif-btn-main {
+  width: 100%;
+  padding: 14px 20px;
+  font-size: 0.95rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: 9999px;
+  box-shadow: 0 6px 20px var(--accent-red-glow);
+}
+
+.notif-btn-secondary {
+  width: 100%;
+  padding: 11px 18px;
+  font-size: 0.85rem;
+  justify-content: center;
+  border-radius: 9999px;
+}
+
+/* ================= BADGE DE ALIAS Y GESTIÓN DE PERFIL ================= */
+.comment-author-badge {
+  background: #f1f5f9;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 10px;
+  padding: 9px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 0.85rem;
+  color: #334155;
+  box-sizing: border-box;
+}
+
+[data-theme="dark"] .comment-author-badge {
+  background: #171a24;
+  border-color: #2b3244;
+  color: #cbd5e1;
+}
+
+.comment-author-badge strong {
+  color: var(--accent-red);
+  font-weight: 800;
+}
+
+.btn-change-alias {
+  background: transparent;
+  border: 1px solid transparent;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: 0.74rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 6px;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.btn-change-alias:hover {
+  color: var(--accent-red);
+  border-color: rgba(255, 30, 39, 0.3);
+  background: rgba(255, 30, 39, 0.1);
+}
+
+/* ================= RESPONSIVE DESIGN TOTAL PARA CELULARES Y TABLETS ================= */
+@media (max-width: 960px) {
+  .client-layout-container {
+    flex-direction: column;
+    gap: 20px;
+  }
+  .announcements-sidebar {
+    width: 100%;
+    min-width: 100%;
+    max-width: 100%;
+  }
+  .sidebar-scroll-container {
+    max-height: 280px;
+    min-height: auto;
+  }
+  .viewer-card {
+    padding: 24px 20px;
+  }
+}
+
+@media (max-width: 640px) {
+  /* Header Móvil Ultra Optimizado: Espacio sin recortes */
+  .header {
+    padding: 10px 0;
+  }
+  .header-inner {
+    padding: 0 10px;
+    gap: 8px;
+  }
+  .header-title-container {
+    gap: 8px;
+  }
+  #logo-clickable img {
+    height: 28px !important;
+  }
+  #logo-clickable span {
+    font-size: 1.05rem !important;
+  }
+  /* Ocultar texto secundario de cabecera en pantallas muy pequeñas */
+  .header-divider,
+  .header-text {
+    display: none !important;
+  }
+  
+  .header-actions {
+    gap: 5px; /* Espacio compacto perfecto para que quepan todos los botones sin desborde */
+    flex-shrink: 0;
+  }
+
+  /* Botón Instalar más compacto en móvil */
+  .pwa-install-btn {
+    padding: 6px 9px;
+    font-size: 0.75rem;
+    gap: 4px;
+  }
+  .pwa-install-btn span:not(.vector-icon-wrap) {
+    font-size: 0.75rem;
+  }
+
+  #notification-header-btn,
+  #user-profile-header-btn {
+    padding: 6px 8px;
+  }
+
+  /* Selector de tema compacto para que NUNCA se corte a la mitad */
+  .theme-switch {
+    width: 48px;
+    height: 26px;
+    flex-shrink: 0;
+  }
+  .theme-switch-thumb {
+    width: 20px;
+    height: 20px;
+    top: 3px;
+    left: 3px;
+  }
+  [data-theme="light"] .theme-switch-thumb {
+    transform: translateX(22px);
+  }
+  .theme-switch-icons svg {
+    width: 11px;
+    height: 11px;
+  }
+
+  /* Contenido Principal con espaciado móvil */
+  .main-content {
+    padding: 20px 16px;
+  }
+
+  /* Tarjeta de estado vacío y lector principal */
+  .card {
+    padding: 24px 16px;
+    border-radius: 18px;
+  }
+  .viewer-card {
+    padding: 20px 16px;
+    border-radius: 20px;
+    border-width: 2.5px;
+  }
+
+  /* Bloqueo de scroll de fondo cuando cualquier modal esté activo */
+  body.modal-open {
+    overflow: hidden !important;
+    touch-action: none !important;
+  }
+
+  /* Modales en móvil: centrados, tamaño proporcionado y scroll interno contenido */
+  .modal-overlay {
+    padding: 16px 12px;
+    align-items: center;
+  }
+  .modal-content {
+    margin: auto;
+    border-radius: 20px;
+    border-width: 2.5px;
+    max-height: 86vh;
+    max-width: 100%;
+  }
+  .modal-inner-scroll {
+    padding: 22px 16px 18px;
+    max-height: calc(86vh - 8px);
+  }
+  .mascot-container {
+    width: 110px;
+    height: 70px;
+    top: -55px;
+  }
+  .modal-close {
+    top: 10px;
+    right: 10px;
+    width: 32px;
+    height: 32px;
+  }
+
+  /* Título y elementos dentro del pop-up en celular */
+  #modal-title {
+    font-size: 1.35rem !important;
+    line-height: 1.25 !important;
+  }
+
+  #modal-image-container img {
+    max-height: 200px !important;
+    border-radius: 12px;
+  }
+
+  .browser-vector {
+    display: none !important; /* Ocultar el mockup de pestañas decorativo para dejarle 100% del ancho al título en móvil */
+  }
+
+  /* Modal Tutorial Notificaciones en Celular */
+  .notif-tutorial-card {
+    padding: 26px 18px 20px !important;
+    border-radius: 22px !important;
+    max-width: 100% !important;
+  }
+  .notif-title {
+    font-size: 1.22rem !important;
+  }
+  .notif-subtitle {
+    font-size: 0.82rem !important;
+    margin-bottom: 14px !important;
+  }
+  .notif-steps-box {
+    padding: 12px 14px !important;
+    gap: 10px !important;
+    margin-bottom: 16px !important;
+  }
+  .notif-btn-main {
+    padding: 12px 16px !important;
+    font-size: 0.88rem !important;
+  }
+  .notif-btn-secondary {
+    padding: 10px 16px !important;
+    font-size: 0.82rem !important;
+  }
+
+  /* Drawer de Comentarios */
+  .comments-drawer-panel {
+    padding: 18px 14px;
+    border-radius: 16px;
+  }
+
+  /* ================= GESTIÓN ADMIN MÓVIL: VISTA VERTICAL / TARJETAS ================= */
+  .admin-table thead {
+    display: none; /* Ocultar encabezados horizontales apretados en móvil */
+  }
+
+  .admin-table,
+  .admin-table tbody,
+  .admin-table tr,
+  .admin-table td {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .admin-table tr {
+    margin-bottom: 16px;
+    background: var(--bg-card);
+    border: 1.5px solid var(--border-color);
+    border-radius: 16px;
+    padding: 16px 14px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+  }
+
+  .admin-table td {
+    padding: 8px 0;
+    border-bottom: 1px dashed var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.88rem;
+    text-align: right;
+  }
+
+  .admin-table td:last-child {
+    border-bottom: none;
+    padding-top: 12px;
+    justify-content: flex-end;
+  }
+
+  .admin-table td::before {
+    content: attr(data-label);
+    font-weight: 800;
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    text-align: left;
+    margin-right: 12px;
+    flex-shrink: 0;
+  }
+
+  /* Fila vacía de la tabla */
+  .admin-table tr td[colspan] {
+    border: none;
+    display: block;
+    text-align: center;
+    padding: 24px 10px;
+  }
+  .admin-table tr td[colspan]::before {
+    display: none;
+  }
+
+  /* Admin Create Form - adaptado 100% a una sola columna en pantallas móviles */
+  #admin-create-announcement-form > div {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Toast en móvil */
+  .hedam-toast-container {
+    bottom: 16px;
+    right: 16px;
+    left: 16px;
+    justify-content: center;
+  }
+  .hedam-toast-inner {
+    width: 100%;
+    justify-content: center;
+    font-size: 0.82rem;
+    padding: 10px 16px;
+  }
 }

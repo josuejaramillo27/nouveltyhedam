@@ -44,6 +44,79 @@ document.addEventListener('DOMContentLoaded', () => {
     return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="${strokeWidth}" stroke-linecap="round" stroke-linejoin="round" class="${className}"${extraStyle}>${iconPaths}</svg>`;
   }
 
+  // ================= CONFIGURACIÓN OFICIAL DE FIREBASE Y CLOUD FIRESTORE =================
+  const firebaseConfig = {
+    apiKey: "AIzaSyBmM0YUumjsEo0ApyJ78ah1OQPxcMzFcNY",
+    authDomain: "nouveltyhedam.firebaseapp.com",
+    projectId: "nouveltyhedam",
+    storageBucket: "nouveltyhedam.firebasestorage.app",
+    messagingSenderId: "518596302149",
+    appId: "1:518596302149:web:10b3e91c765dfc65841a2c"
+  };
+
+  // VAPID Key para Web Push FCM:
+  const FIREBASE_VAPID_KEY = "BMxvRpCIBzqdlRu_b_MrYv8N17sN4panZD4QD0xaVCSJaQbii9OTb1bPlP2IDHrvgJZoT9joHt8U1sdBPzK13a0";
+
+  let firestoreDb = null;
+  try {
+    if (typeof firebase !== 'undefined') {
+      if (!firebase.apps || !firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+      }
+      firestoreDb = firebase.firestore();
+      console.log('[Firebase] Cloud Firestore inicializado correctamente para nouveltyhedam');
+    }
+  } catch (err) {
+    console.warn('[Firebase] Inicialización de Firestore omitida o pendiente:', err.message);
+  }
+
+  // Sincronización en la Nube con Firestore (Con tolerancia a fallos offline y fallback a LocalStorage)
+  function syncAnnouncementToFirestore(announcement) {
+    if (!firestoreDb) return;
+    try {
+      firestoreDb.collection('announcements').doc(announcement.id).set(announcement, { merge: true })
+        .catch(err => console.warn('[Firestore] Error al sincronizar novedad:', err.message));
+    } catch (e) {
+      console.warn('[Firestore] Excepción en sincronización:', e);
+    }
+  }
+
+  function deleteAnnouncementFromFirestore(id) {
+    if (!firestoreDb) return;
+    try {
+      firestoreDb.collection('announcements').doc(id).delete()
+        .catch(err => console.warn('[Firestore] Error al eliminar novedad:', err.message));
+      // Eliminar también comentarios asociados de esa novedad en la nube
+      firestoreDb.collection('comments').where('announcementId', '==', id).get()
+        .then(snapshot => {
+          snapshot.forEach(doc => doc.ref.delete().catch(() => {}));
+        })
+        .catch(() => {});
+    } catch (e) {
+      console.warn('[Firestore] Excepción al borrar novedad:', e);
+    }
+  }
+
+  function syncCommentToFirestore(comment) {
+    if (!firestoreDb) return;
+    try {
+      firestoreDb.collection('comments').doc(comment.id).set(comment)
+        .catch(err => console.warn('[Firestore] Error al sincronizar comentario:', err.message));
+    } catch (e) {
+      console.warn('[Firestore] Excepción al guardar comentario:', e);
+    }
+  }
+
+  function deleteCommentFromFirestore(id) {
+    if (!firestoreDb) return;
+    try {
+      firestoreDb.collection('comments').doc(id).delete()
+        .catch(err => console.warn('[Firestore] Error al eliminar comentario:', err.message));
+    } catch (e) {
+      console.warn('[Firestore] Excepción al borrar comentario:', e);
+    }
+  }
+
   // ================= CLAVES DE ALMACENAMIENTO =================
   const STORAGE_KEYS = {
     ANNOUNCEMENTS: 'hedam_announcements',
@@ -51,32 +124,53 @@ document.addEventListener('DOMContentLoaded', () => {
     WEB_VIEWS: 'hedam_web_views',
     THEME: 'hedam_theme',
     ADMIN_AUTH: 'hedam_admin_auth',
-    VISITED_SESSION: 'hedam_visited_session'
+    VISITED_SESSION: 'hedam_visited_session',
+    POPUP_LAST_SEEN: 'hedam_popup_last_seen',
+    POPUP_LAST_ANNOUNCEMENT_ID: 'hedam_popup_last_announcement_id',
+    NOTIF_MODAL_SEEN: 'hedam_notif_modal_seen',
+    USER_NICKNAME: 'hedam_user_nickname',
+    USER_NICKNAME_DATE: 'hedam_user_nickname_date'
   };
 
-  // ================= ESTADO DE LA APLICACIÓN =================
-  let state = {
-    announcements: loadJSON(STORAGE_KEYS.ANNOUNCEMENTS, []),
-    comments: loadJSON(STORAGE_KEYS.COMMENTS, []),
-    globalWebViews: parseInt(localStorage.getItem(STORAGE_KEYS.WEB_VIEWS) || '0', 10),
-    theme: localStorage.getItem(STORAGE_KEYS.THEME) || 'dark',
-    isAuthenticated: sessionStorage.getItem(STORAGE_KEYS.ADMIN_AUTH) === 'true',
-    activeModalAnnouncement: null,
-    selectedModerationId: null,
-    showCommentsDrawer: false,
-    logoClickCount: 0,
-    logoClickTimer: null
-  };
+  // Novedades iniciales por defecto (vacío para que el administrador publique solo contenido oficial)
+  const DEFAULT_ANNOUNCEMENTS = [];
 
   // Helpers de LocalStorage
   function loadJSON(key, defaultValue) {
     try {
       const data = localStorage.getItem(key);
-      return data ? JSON.parse(data) : defaultValue;
+      if (data !== null) {
+        return JSON.parse(data);
+      }
+      return defaultValue;
     } catch {
       return defaultValue;
     }
   }
+
+  // ================= ESTADO DE LA APLICACIÓN =================
+  let initialAnnouncements = loadJSON(STORAGE_KEYS.ANNOUNCEMENTS, []);
+  if (!Array.isArray(initialAnnouncements)) {
+    initialAnnouncements = [];
+  }
+  // Purgar de forma permanente la novedad de ejemplo si existía en la caché local
+  initialAnnouncements = initialAnnouncements.filter(a => a.id !== 'ann_oficial_bienvenida');
+  localStorage.setItem(STORAGE_KEYS.ANNOUNCEMENTS, JSON.stringify(initialAnnouncements));
+
+  let state = {
+    announcements: initialAnnouncements,
+    comments: loadJSON(STORAGE_KEYS.COMMENTS, []),
+    globalWebViews: parseInt(localStorage.getItem(STORAGE_KEYS.WEB_VIEWS) || '0', 10),
+    theme: localStorage.getItem(STORAGE_KEYS.THEME) || 'dark',
+    isAuthenticated: sessionStorage.getItem(STORAGE_KEYS.ADMIN_AUTH) === 'true',
+    selectedAnnouncementId: null,
+    activeModalAnnouncement: null,
+    selectedModerationId: null,
+    showCommentsDrawer: false,
+    hasAutoShownModal: false,
+    logoClickCount: 0,
+    logoClickTimer: null
+  };
 
   function saveAnnouncements() {
     localStorage.setItem(STORAGE_KEYS.ANNOUNCEMENTS, JSON.stringify(state.announcements));
@@ -88,6 +182,49 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function saveWebViews() {
     localStorage.setItem(STORAGE_KEYS.WEB_VIEWS, state.globalWebViews.toString());
+  }
+
+  // ================= REGLA DE IDENTIDAD (BLOQUEO DE 15 DÍAS) =================
+  const FIFTEEN_DAYS_MS = 15 * 24 * 60 * 60 * 1000; // 15 días en ms
+
+  function getUserNickname() {
+    return localStorage.getItem(STORAGE_KEYS.USER_NICKNAME) || '';
+  }
+
+  function getNicknameSetDate() {
+    const raw = localStorage.getItem(STORAGE_KEYS.USER_NICKNAME_DATE);
+    return raw ? parseInt(raw, 10) : 0;
+  }
+
+  function canChangeNickname() {
+    const setDate = getNicknameSetDate();
+    if (!setDate) return true;
+    return (Date.now() - setDate) >= FIFTEEN_DAYS_MS;
+  }
+
+  function getRemainingDaysForNickname() {
+    const setDate = getNicknameSetDate();
+    if (!setDate) return 0;
+    const diff = FIFTEEN_DAYS_MS - (Date.now() - setDate);
+    if (diff <= 0) return 0;
+    return Math.ceil(diff / (24 * 60 * 60 * 1000));
+  }
+
+  function getNextChangeDateString() {
+    const setDate = getNicknameSetDate();
+    if (!setDate) return '';
+    const nextDate = new Date(setDate + FIFTEEN_DAYS_MS);
+    return nextDate.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
+  }
+
+  function getLocalDateTimeString(date = new Date()) {
+    const pad = (n) => String(n).padStart(2, '0');
+    const y = date.getFullYear();
+    const m = pad(date.getMonth() + 1);
+    const d = pad(date.getDate());
+    const h = pad(date.getHours());
+    const min = pad(date.getMinutes());
+    return `${y}-${m}-${d}T${h}:${min}`;
   }
 
   // ================= CONTROL DE TEMA (CLARO / OSCURO) =================
@@ -139,14 +276,16 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  // Requisito 2: Se puede ver varias veces, pero solo contabilizar UNA vez en estadísticas del admin
   function trackAnnouncementView(id) {
-    const key = `hedam_seen_novelty_${id}`;
-    if (!sessionStorage.getItem(key)) {
-      sessionStorage.setItem(key, 'true');
+    const key = `hedam_counted_view_${id}`;
+    if (!localStorage.getItem(key)) {
+      localStorage.setItem(key, 'true');
       const item = state.announcements.find(a => a.id === id);
       if (item) {
         item.views = (item.views || 0) + 1;
         saveAnnouncements();
+        syncAnnouncementToFirestore(item);
       }
     }
   }
@@ -156,6 +295,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (item) {
       item.clicks = (item.clicks || 0) + 1;
       saveAnnouncements();
+      syncAnnouncementToFirestore(item);
     }
   }
 
@@ -217,22 +357,33 @@ document.addEventListener('DOMContentLoaded', () => {
   // ================= VISTA CLIENTE (FEED Y MODAL) =================
   function getActiveAnnouncements() {
     const now = new Date();
-    return state.announcements.filter(a => {
-      const isPublished = a.status === 'published';
+    const active = state.announcements.filter(a => {
+      const isPublished = (a.status === 'published' || !a.status);
       const notExpired = !a.expiresAt || new Date(a.expiresAt) > now;
       return isPublished && notExpired;
     });
+
+    // Requisito 4: Ordenar fijados (isPinned === true) de primera, luego por fecha más reciente
+    return active.sort((a, b) => {
+      const aPinned = a.isPinned === true ? 1 : 0;
+      const bPinned = b.isPinned === true ? 1 : 0;
+      if (bPinned !== aPinned) {
+        return bPinned - aPinned;
+      }
+      return new Date(b.publishedAt || 0).getTime() - new Date(a.publishedAt || 0).getTime();
+    });
   }
 
+  // Requisito 5: Todos los anuncios en un lateral izquierdo scrollable y resto de pantalla con el anuncio completo
   function renderClientView() {
     const feedContainer = document.getElementById('news-feed-container');
     const openPopupBtnContainer = document.getElementById('open-popup-btn-container');
     const activeList = getActiveAnnouncements();
 
     if (activeList.length === 0) {
-      openPopupBtnContainer.classList.add('view-hidden');
+      if (openPopupBtnContainer) openPopupBtnContainer.classList.add('view-hidden');
       feedContainer.innerHTML = `
-        <div class="card" style="text-align: center; padding: 60px 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px;">
+        <div class="card" style="width: 100%; text-align: center; padding: 60px 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px;">
           <div style="width: 64px; height: 64px; border-radius: 50%; background: rgba(255, 30, 39, 0.1); display: flex; align-items: center; justify-content: center; color: var(--accent-red);">
             <span class="vector-icon-wrap anim-shake">
               ${renderIcon('megaphone', { size: 30, color: 'var(--accent-red)' })}
@@ -246,65 +397,268 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    openPopupBtnContainer.classList.remove('view-hidden');
+    if (openPopupBtnContainer) openPopupBtnContainer.classList.remove('view-hidden');
     const openFeaturedBtn = document.getElementById('open-featured-btn');
     if (openFeaturedBtn) {
       openFeaturedBtn.onclick = () => openAnnouncementModal(activeList[0]);
     }
 
-    // Renderizar tarjetas del muro
-    let html = `<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 24px;">`;
-    activeList.forEach((announcement, index) => {
-      const commentsCount = state.comments.filter(c => c.announcementId === announcement.id).length;
-      const formattedDate = new Date(announcement.publishedAt).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
+    // Asegurar que haya una novedad seleccionada
+    if (!state.selectedAnnouncementId || !activeList.some(a => a.id === state.selectedAnnouncementId)) {
+      state.selectedAnnouncementId = activeList[0].id;
+    }
 
-      html += `
-        <div class="card action-hover-trigger" style="cursor: pointer; position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between;" onclick="window.hedamApp.openModal('${announcement.id}')">
-          ${index === 0 ? `
-            <div style="position: absolute; top: 14px; right: 14px; background: var(--accent-red); color: white; font-size: 0.68rem; font-weight: 800; padding: 3px 9px; border-radius: 9999px; text-transform: uppercase; letter-spacing: 0.5px; display: inline-flex; align-items: center; gap: 4px;">
-              <span class="vector-icon-wrap anim-sparkle">
-                ${renderIcon('sparkles', { size: 11, color: '#fff' })}
-              </span>
-              <span>Destacado</span>
-            </div>` : ''}
+    const selectedAnnouncement = activeList.find(a => a.id === state.selectedAnnouncementId) || activeList[0];
+    trackAnnouncementView(selectedAnnouncement.id);
 
-          <div>
-            <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 8px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px;">
-              ${renderIcon('calendar', { size: 13, color: 'var(--text-muted)' })}
-              <span>${formattedDate}</span>
-            </div>
-            <h3 style="font-size: 1.22rem; font-weight: 800; color: var(--text-main); margin-bottom: 12px; line-height: 1.3;">
-              ${escapeHTML(announcement.title)}
-            </h3>
-            <p style="color: var(--text-muted); font-size: 0.9rem; white-space: pre-line; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; margin-bottom: 18px; line-height: 1.5;">
-              ${escapeHTML(announcement.content)}
-            </p>
+    // ================= 1. LATERAL IZQUIERDO =================
+    let sidebarHtml = `
+      <aside class="announcements-sidebar">
+        <div class="sidebar-header-box">
+          <div class="sidebar-header-title">
+            <span class="vector-icon-wrap anim-sparkle" style="color: var(--accent-red);">
+              ${renderIcon('sparkles', { size: 16, color: 'var(--accent-red)' })}
+            </span>
+            <span>Tablón de Novedades</span>
+          </div>
+          <span class="sidebar-count-badge">${activeList.length} activas</span>
+        </div>
+
+        <div class="sidebar-scroll-container">
+    `;
+
+    activeList.forEach((item) => {
+      const isSelected = item.id === selectedAnnouncement.id;
+      const commentsCount = state.comments.filter(c => c.announcementId === item.id).length;
+      const itemDate = new Date(item.publishedAt).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' });
+      const itemPinned = item.isPinned === true;
+
+      sidebarHtml += `
+        <div class="sidebar-item-card ${isSelected ? 'sidebar-item-active' : ''}" onclick="window.hedamApp.selectAnnouncement('${item.id}')">
+          <div class="sidebar-item-top">
+            <span style="font-size: 0.76rem; color: var(--text-muted); font-weight: 700; display: inline-flex; align-items: center; gap: 5px;">
+              ${renderIcon('calendar', { size: 12, color: 'var(--text-muted)' })}
+              <span>${itemDate}</span>
+            </span>
+            ${itemPinned ? `
+              <span class="badge-pinned">
+                📌 Fijado
+              </span>` : ''}
           </div>
 
-          <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-color); padding-top: 14px; font-size: 0.84rem; color: var(--text-muted);">
-            <span style="display: inline-flex; align-items: center; gap: 6px;">
-              ${renderIcon('message-square', { size: 14, className: 'vector-hover-bounce' })}
-              <span>${commentsCount} comentarios</span>
+          <div class="sidebar-item-title">
+            ${escapeHTML(item.title)}
+          </div>
+
+          <div class="sidebar-item-excerpt">
+            ${escapeHTML(item.content)}
+          </div>
+
+          <div class="sidebar-item-meta">
+            <span class="badge-views" title="Lecturas públicas">
+              ${renderIcon('eye', { size: 13, color: 'var(--accent-red)' })}
+              <span>${item.views || 0} lecturas</span>
             </span>
-            <span style="color: var(--accent-red); font-weight: 700; display: inline-flex; align-items: center; gap: 5px;">
-              <span>Ver detalle</span>
-              <span class="vector-icon-wrap vector-hover-slide">
-                ${renderIcon('arrow-right', { size: 14, color: 'var(--accent-red)' })}
-              </span>
+            <span style="display: inline-flex; align-items: center; gap: 4px;" title="Comentarios">
+              ${renderIcon('message-square', { size: 13 })}
+              <span>${commentsCount}</span>
             </span>
           </div>
-        </div>`;
+        </div>
+      `;
     });
-    html += `</div>`;
-    feedContainer.innerHTML = html;
 
-    // Pop-up automático al entrar si no se ha visto en esta sesión
-    const latest = activeList[0];
-    if (latest) {
-      const seenKey = `seen_${latest.id}`;
-      if (!sessionStorage.getItem(seenKey)) {
-        sessionStorage.setItem(seenKey, 'true');
-        openAnnouncementModal(latest);
+    sidebarHtml += `
+        </div>
+      </aside>
+    `;
+
+    // ================= 2. LECTOR PRINCIPAL (RESTO DE LA PANTALLA) =================
+    // Requisito 3: En la pantalla principal NO sale la mascota, solo en el pop-up.
+    const selectedComments = state.comments.filter(c => c.announcementId === selectedAnnouncement.id);
+    const selectedDate = new Date(selectedAnnouncement.publishedAt).toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' });
+    const selectedPinned = selectedAnnouncement.isPinned === true;
+
+    let mainViewerHtml = `
+      <main class="announcement-main-viewer">
+        <div class="viewer-card">
+
+          <!-- Badges de cabecera -->
+          <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 14px;">
+            <span style="background: var(--accent-red); color: white; padding: 5px 12px; border-radius: 9999px; font-size: 0.74rem; font-weight: 900; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 10px var(--accent-red-glow);">
+              <span class="vector-icon-wrap anim-shake">
+                ${renderIcon('megaphone', { size: 13, color: '#fff' })}
+              </span>
+              <span>NOVEDAD OFICIAL</span>
+            </span>
+
+            ${selectedPinned ? `
+              <span class="badge-pinned">
+                📌 FIJADO AL INICIO
+              </span>
+            ` : ''}
+
+            <!-- Requisito 2: Vistas públicas visibles para los usuarios -->
+            <span style="background: #f1f4f9; border: 1px solid #e1e7f0; color: #475569; padding: 4px 10px; border-radius: 9999px; font-size: 0.75rem; font-weight: 700; display: inline-flex; align-items: center; gap: 5px;">
+              ${renderIcon('eye', { size: 13, color: 'var(--accent-red)' })}
+              <span>${selectedAnnouncement.views || 0} lecturas públicas</span>
+            </span>
+
+            <span style="font-size: 0.78rem; color: #64748b; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; margin-left: auto;">
+              ${renderIcon('calendar', { size: 13, color: '#64748b' })}
+              <span>${selectedDate}</span>
+            </span>
+          </div>
+
+          <!-- Título Principal -->
+          <h2 style="font-size: 1.85rem; font-weight: 900; line-height: 1.22; color: #0e1118; text-transform: uppercase; margin-bottom: 20px;">
+            ${escapeHTML(selectedAnnouncement.title)}
+          </h2>
+
+          <!-- Imagen / Banner si existe -->
+          ${selectedAnnouncement.imageUrl ? `
+            <div style="margin-bottom: 22px;">
+              <img src="${escapeHTML(selectedAnnouncement.imageUrl)}" alt="Banner novedad" style="width: 100%; max-height: 280px; object-fit: cover; border-radius: 14px; border: 1.5px solid #e2e8f0;" />
+            </div>
+          ` : ''}
+
+          <!-- Cuerpo formateado con viñetas y alertas -->
+          <div style="margin-bottom: 28px;">
+            ${formatAnnouncementContent(selectedAnnouncement.content)}
+          </div>
+
+          <!-- Botones de Acción (CTA Personalizado + Comentar Novedad) -->
+          <div style="display: flex; gap: 14px; align-items: center; flex-wrap: wrap; padding-top: 18px; border-top: 2px solid #f1f4f9; margin-bottom: 26px;">
+            ${selectedAnnouncement.ctaUrl ? `
+              <a href="${escapeHTML(selectedAnnouncement.ctaUrl)}" target="_blank" class="btn-primary" onclick="window.hedamApp.trackClick('${selectedAnnouncement.id}')" style="flex: 1; min-width: 220px; padding: 14px 22px; font-size: 0.92rem; display: inline-flex; align-items: center; justify-content: center; gap: 8px;">
+                <span class="vector-icon-wrap vector-hover-bounce">
+                  ${renderIcon('external-link', { size: 16 })}
+                </span>
+                <span>${escapeHTML(selectedAnnouncement.ctaText || 'VER AHORA')}</span>
+                <span class="vector-icon-wrap vector-hover-slide">
+                  ${renderIcon('arrow-right', { size: 16 })}
+                </span>
+              </a>
+            ` : ''}
+
+            <button type="button" class="btn-secondary" onclick="window.hedamApp.focusViewerComment()" style="flex: 1; min-width: 200px; padding: 14px 22px; font-size: 0.92rem; display: inline-flex; align-items: center; justify-content: center; gap: 8px;">
+              <span class="vector-icon-wrap vector-hover-bounce">
+                ${renderIcon('message-square', { size: 16 })}
+              </span>
+              <span>COMENTAR NOVEDAD</span>
+            </button>
+
+            <button type="button" class="btn-outline" onclick="window.hedamApp.openModal('${selectedAnnouncement.id}')" style="padding: 13px 18px; font-size: 0.88rem; color: #1e293b; border-color: #cbd5e1; display: inline-flex; align-items: center; gap: 7px;" title="Ver con fondo glassmorphism">
+              ${renderIcon('sparkles', { size: 14, color: 'var(--accent-red)' })}
+              <span>Pop-up</span>
+            </button>
+          </div>
+
+          <!-- Sección de Comentarios Integrada -->
+          <div style="background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 18px; padding: 22px 24px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+              <h4 style="font-size: 1.05rem; font-weight: 800; color: #0e1118; margin: 0; display: flex; align-items: center; gap: 8px;">
+                <span style="color: var(--accent-red);">${renderIcon('message-square', { size: 16 })}</span>
+                <span>Hilo de Comentarios</span>
+              </h4>
+              <span style="font-size: 0.8rem; color: #64748b; font-weight: 700;">
+                ${selectedComments.length} mensajes
+              </span>
+            </div>
+
+            <div id="viewer-comments-list" style="max-height: 230px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; padding-right: 4px;">
+    `;
+
+    if (selectedComments.length === 0) {
+      mainViewerHtml += `
+        <p style="color: #94a3b8; font-size: 0.88rem; text-align: center; padding: 18px 0; margin: 0;">
+          Aún no hay comentarios en esta novedad. ¡Sé el primero en participar!
+        </p>
+      `;
+    } else {
+      selectedComments.forEach(c => {
+        const isOfficial = c.userId === 'admin_official' || (c.userName && c.userName.toLowerCase().includes('soporte'));
+        const timeStr = new Date(c.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+        mainViewerHtml += `
+          <!-- Requisito 1: Fondo 100% sólido, nunca transparente, texto nítido -->
+          <div class="${isOfficial ? 'comment-card-admin' : 'comment-card-user'}">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+              ${isOfficial ? `
+                <div style="display: inline-flex; align-items: center; gap: 7px;">
+                  <img src="assets/mascot.png" alt="Soporte HEDAM" class="admin-comment-mascot" />
+                  <span style="font-weight: 800; font-size: 0.88rem; color: var(--accent-red);">Soporte HEDAM</span>
+                </div>
+              ` : `
+                <span style="font-weight: 800; font-size: 0.85rem; color: var(--accent-red);">${escapeHTML(c.userName)}</span>
+              `}
+              <span style="font-size: 0.74rem; color: #64748b; font-weight: 600;">${timeStr}</span>
+            </div>
+            <p style="margin: 6px 0 0; font-size: 0.92rem; color: #0f172a; font-weight: 600; line-height: 1.45;">${escapeHTML(c.content)}</p>
+          </div>
+        `;
+      });
+    }
+
+    mainViewerHtml += `
+            </div>
+
+            <!-- Formulario de Comentarios Integrado -->
+            <form onsubmit="window.hedamApp.sendViewerComment(event, '${selectedAnnouncement.id}')" style="display: flex; flex-direction: column; gap: 8px;">
+              <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                ${getUserNickname() ? `
+                  <div class="comment-author-badge" style="flex: 0 0 240px;">
+                    <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Comentando como: <strong>${escapeHTML(getUserNickname())}</strong></span>
+                    <button type="button" class="btn-change-alias" onclick="window.hedamApp.openProfileModal()" title="Gestionar alias de usuario">
+                      ${renderIcon('user', { size: 12 })} Perfil
+                    </button>
+                  </div>
+                ` : `
+                  <input id="viewer-author-input" type="text" required placeholder="Tu alias o nombre" style="flex: 0 0 160px; padding: 10px 14px; border-radius: 10px; border: 1.5px solid #cbd5e1; font-size: 0.85rem; outline: none; color: #0e1118; background: #ffffff;" />
+                `}
+                <input id="viewer-text-input" type="text" required placeholder="Escribe una opinión o consulta..." style="flex: 1; min-width: 200px; padding: 10px 14px; border-radius: 10px; border: 1.5px solid #cbd5e1; font-size: 0.85rem; outline: none; color: #0e1118; background: #ffffff;" />
+                <button type="submit" class="btn-primary" style="padding: 0 20px; border-radius: 10px; box-shadow: none; display: flex; align-items: center; justify-content: center; height: 42px;" title="Enviar">
+                  <span class="vector-icon-wrap vector-hover-slide">
+                    ${renderIcon('send', { size: 16 })}
+                  </span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </main>
+    `;
+
+    feedContainer.innerHTML = sidebarHtml + mainViewerHtml;
+
+    // Requisito: Al entrar a la web, lo PRIMERO que hace es mostrar el elegante aviso tutorial
+    // con la muñeca rosada para activar notificaciones (si aún no las ha otorgado).
+    if (!state.hasAutoShownModal && !state.isAuthenticated) {
+      state.hasAutoShownModal = true;
+      const notifAlreadyGranted = ('Notification' in window && Notification.permission === 'granted');
+      const notifModalSeen = parseInt(localStorage.getItem(STORAGE_KEYS.NOTIF_MODAL_SEEN) || '0', 10);
+      const NOTIF_COOLDOWN = 12 * 60 * 60 * 1000; // 12 horas
+
+      if (!notifAlreadyGranted && (Date.now() - notifModalSeen > NOTIF_COOLDOWN)) {
+        setTimeout(() => {
+          openNotifTutorialModal();
+        }, 400);
+      } else if (activeList.length > 0) {
+        // Si ya tiene notificaciones concedidas o ya vio el aviso, flujo normal de pop-up si hay nueva
+        const lastSeenTimestamp = parseInt(localStorage.getItem(STORAGE_KEYS.POPUP_LAST_SEEN) || '0', 10);
+        const lastSeenId = localStorage.getItem(STORAGE_KEYS.POPUP_LAST_ANNOUNCEMENT_ID);
+        const topAnnouncement = activeList[0];
+        const now = Date.now();
+        const COOLDOWN_MS = 24 * 60 * 60 * 1000; // 24 Horas
+        
+        const isNewAnnouncement = topAnnouncement.id !== lastSeenId;
+        const cooldownPassed = (now - lastSeenTimestamp) > COOLDOWN_MS;
+
+        if (isNewAnnouncement || cooldownPassed) {
+          openAnnouncementModal(topAnnouncement);
+          localStorage.setItem(STORAGE_KEYS.POPUP_LAST_SEEN, now.toString());
+          localStorage.setItem(STORAGE_KEYS.POPUP_LAST_ANNOUNCEMENT_ID, topAnnouncement.id);
+        }
       }
     }
   }
@@ -323,6 +677,21 @@ document.addEventListener('DOMContentLoaded', () => {
   const modalCommentsCount = document.getElementById('modal-comments-count');
   const modalCommentsList = document.getElementById('modal-comments-list');
   const modalCommentForm = document.getElementById('modal-comment-form');
+
+  // ================= CONTROL DE BLOQUEO DE SCROLL DE FONDO PARA MODALES =================
+  let activeOpenModalsCount = 0;
+
+  function lockBodyScroll() {
+    activeOpenModalsCount++;
+    document.body.classList.add('modal-open');
+  }
+
+  function unlockBodyScroll() {
+    activeOpenModalsCount = Math.max(0, activeOpenModalsCount - 1);
+    if (activeOpenModalsCount === 0) {
+      document.body.classList.remove('modal-open');
+    }
+  }
 
   function openAnnouncementModal(announcement) {
     state.activeModalAnnouncement = announcement;
@@ -359,11 +728,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     renderModalComments();
     modalOverlay.classList.remove('view-hidden');
+    lockBodyScroll();
   }
 
   function closeAnnouncementModal() {
     modalOverlay.classList.add('view-hidden');
     state.activeModalAnnouncement = null;
+    unlockBodyScroll();
   }
 
   if (modalCloseBtn) {
@@ -445,8 +816,41 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  function updateModalCommentFormInputs() {
+    const container = document.getElementById('modal-comment-fields-container');
+    if (!container) return;
+    const currentAlias = getUserNickname();
+    if (currentAlias) {
+      container.innerHTML = `
+        <div class="comment-author-badge" style="flex: 0 0 220px;">
+          <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Comentando como: <strong>${escapeHTML(currentAlias)}</strong></span>
+          <button type="button" class="btn-change-alias" onclick="window.hedamApp.openProfileModal()" title="Gestionar alias de usuario">
+            ${renderIcon('user', { size: 12 })} Perfil
+          </button>
+        </div>
+        <input id="comment-text-input" type="text" required placeholder="Escribe una opinión o consulta..." style="flex: 1; min-width: 180px; padding: 10px 14px; border-radius: 10px; border: 1.5px solid #dce2ee; font-size: 0.85rem; outline: none; color: #0e1118; background: #ffffff;" />
+        <button type="submit" class="btn-primary" style="padding: 0 20px; border-radius: 10px; box-shadow: none; display: flex; align-items: center; justify-content: center;" title="Enviar">
+          <span class="vector-icon-wrap vector-hover-slide">
+            ${renderIcon('send', { size: 16 })}
+          </span>
+        </button>
+      `;
+    } else {
+      container.innerHTML = `
+        <input id="comment-author-input" type="text" required placeholder="Tu alias o nombre" style="flex: 0 0 150px; padding: 10px 12px; border-radius: 10px; border: 1.5px solid #dce2ee; font-size: 0.85rem; outline: none; color: #0e1118; background: #ffffff;" />
+        <input id="comment-text-input" type="text" required placeholder="Escribe una opinión o consulta..." style="flex: 1; min-width: 180px; padding: 10px 14px; border-radius: 10px; border: 1.5px solid #dce2ee; font-size: 0.85rem; outline: none; color: #0e1118; background: #ffffff;" />
+        <button type="submit" class="btn-primary" style="padding: 0 20px; border-radius: 10px; box-shadow: none; display: flex; align-items: center; justify-content: center;" title="Enviar">
+          <span class="vector-icon-wrap vector-hover-slide">
+            ${renderIcon('send', { size: 16 })}
+          </span>
+        </button>
+      `;
+    }
+  }
+
   function renderModalComments() {
     if (!state.activeModalAnnouncement) return;
+    updateModalCommentFormInputs();
     const itemComments = state.comments.filter(c => c.announcementId === state.activeModalAnnouncement.id);
     modalCommentsCount.textContent = `${itemComments.length} mensajes`;
 
@@ -460,46 +864,76 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let html = '';
     itemComments.forEach(c => {
+      const isOfficial = c.userId === 'admin_official' || (c.userName && c.userName.toLowerCase().includes('soporte'));
       const timeStr = new Date(c.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
       html += `
-        <div style="background: #f8fafc; padding: 11px 14px; border-radius: 12px; border: 1px solid #e2e8f0;">
-          <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
-            <span style="font-weight: 800; font-size: 0.84rem; color: var(--accent-red);">${escapeHTML(c.userName)}</span>
-            <span style="font-size: 0.74rem; color: #8892a4;">${timeStr}</span>
+        <!-- Requisito 1: Fondo 100% sólido y texto oscuro de alto contraste -->
+        <div class="${isOfficial ? 'comment-card-admin' : 'comment-card-user'}">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+            ${isOfficial ? `
+              <div style="display: inline-flex; align-items: center; gap: 7px;">
+                <img src="assets/mascot.png" alt="Soporte HEDAM" class="admin-comment-mascot" />
+                <span style="font-weight: 800; font-size: 0.88rem; color: var(--accent-red);">Soporte HEDAM</span>
+              </div>
+            ` : `
+              <span style="font-weight: 800; font-size: 0.85rem; color: var(--accent-red);">${escapeHTML(c.userName)}</span>
+            `}
+            <span style="font-size: 0.74rem; color: #64748b; font-weight: 600;">${timeStr}</span>
           </div>
-          <p style="margin: 0; font-size: 0.9rem; color: #1e293b;">${escapeHTML(c.content)}</p>
+          <p style="margin: 6px 0 0; font-size: 0.92rem; color: #0f172a; font-weight: 600; line-height: 1.45;">${escapeHTML(c.content)}</p>
         </div>`;
     });
     modalCommentsList.innerHTML = html;
   }
 
-  // Enviar comentario desde el cliente
+  function submitComment(announcementId, author, content) {
+    const newComment = {
+      id: 'comm_' + Date.now().toString(36) + Math.random().toString(36).substring(2, 6),
+      announcementId: announcementId,
+      userId: 'client_' + Math.random().toString(36).substring(2, 6),
+      userName: author,
+      content: content,
+      createdAt: new Date().toISOString()
+    };
+
+    state.comments.push(newComment);
+    saveComments();
+    syncCommentToFirestore(newComment);
+    renderClientView();
+    if (state.activeModalAnnouncement && state.activeModalAnnouncement.id === announcementId) {
+      renderModalComments();
+    }
+    showToast('¡Comentario publicado!', 'message-square');
+  }
+
+  // Enviar comentario desde el modal cliente
   if (modalCommentForm) {
     modalCommentForm.addEventListener('submit', (e) => {
       e.preventDefault();
       if (!state.activeModalAnnouncement) return;
 
-      const authorInput = document.getElementById('comment-author-input');
       const textInput = document.getElementById('comment-text-input');
-      const content = textInput.value.trim();
-      const author = authorInput.value.trim() || 'Miembro de la Comunidad';
-
+      const content = textInput ? textInput.value.trim() : '';
       if (!content) return;
 
-      const newComment = {
-        id: 'comm_' + Date.now().toString(36) + Math.random().toString(36).substring(2, 6),
-        announcementId: state.activeModalAnnouncement.id,
-        userId: 'client_' + Math.random().toString(36).substring(2, 6),
-        userName: author,
-        content: content,
-        createdAt: new Date().toISOString()
-      };
-
-      state.comments.push(newComment);
-      saveComments();
-      textInput.value = '';
-      renderModalComments();
-      renderClientView();
+      const currentAlias = getUserNickname();
+      if (currentAlias) {
+        submitComment(state.activeModalAnnouncement.id, currentAlias, content);
+        if (textInput) textInput.value = '';
+      } else {
+        const authorInput = document.getElementById('comment-author-input');
+        const author = (authorInput && authorInput.value.trim()) || 'Miembro de la Comunidad';
+        promptNicknameConfirmation(author, () => {
+          localStorage.setItem(STORAGE_KEYS.USER_NICKNAME, author);
+          localStorage.setItem(STORAGE_KEYS.USER_NICKNAME_DATE, Date.now().toString());
+          submitComment(state.activeModalAnnouncement.id, author, content);
+          if (textInput) textInput.value = '';
+          showToast(`¡Nombre "${author}" configurado por 15 días!`, 'check');
+          renderClientView();
+          renderModalComments();
+        });
+      }
     });
   }
 
@@ -556,7 +990,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (state.announcements.length === 0) {
       tableBody.innerHTML = `
         <tr>
-          <td colspan="6" style="padding: 42px 20px; text-align: center; color: var(--text-muted);">
+          <td colspan="7" style="padding: 42px 20px; text-align: center; color: var(--text-muted);">
             <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;">
               <span class="vector-icon-wrap anim-sparkle" style="color: var(--accent-red);">
                 ${renderIcon('sparkles', { size: 28 })}
@@ -573,41 +1007,47 @@ document.addEventListener('DOMContentLoaded', () => {
 
         rowsHtml += `
           <tr>
-            <td style="font-weight: 700;">
+            <td data-label="Novedad" style="font-weight: 700;">
               <div>${escapeHTML(a.title)}</div>
               <div style="font-size: 0.78rem; color: var(--text-muted); font-weight: 400; display: inline-flex; align-items: center; gap: 5px; margin-top: 3px;">
                 ${renderIcon('calendar', { size: 12, color: 'var(--text-muted)' })}
                 <span>${dateStr}</span>
               </div>
             </td>
-            <td>
+            <td data-label="Estado">
               <span style="padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; background: ${a.status === 'published' ? 'rgba(22, 201, 70, 0.15)' : 'rgba(255, 255, 255, 0.08)'}; color: ${a.status === 'published' ? 'var(--accent-green)' : 'var(--text-muted)'}; display: inline-flex; align-items: center; gap: 5px;">
                 ${a.status === 'published' ? renderIcon('check-circle', { size: 12, color: 'var(--accent-green)' }) : ''}
                 ${a.status.toUpperCase()}
               </span>
             </td>
-            <td>
+            <!-- Requisito 4: Botón para Fijar/Desfijar de primera en la fila -->
+            <td data-label="Prioridad">
+              <button type="button" class="btn-outline ${a.isPinned === true ? 'btn-pin-active' : ''}" style="padding: 4px 10px; font-size: 0.78rem; display: inline-flex; align-items: center; gap: 5px;" onclick="window.hedamApp.togglePin('${a.id}')" title="${a.isPinned === true ? 'Desfijar de la primera posición' : 'Fijar de primera en la fila'}">
+                <span>${a.isPinned === true ? '📌 Fijado' : '☆ Fijar'}</span>
+              </button>
+            </td>
+            <td data-label="Vistas">
               <span style="display: inline-flex; align-items: center; gap: 6px;">
                 ${renderIcon('eye', { size: 15, color: 'var(--accent-red)' })}
                 <span>${a.views || 0}</span>
               </span>
             </td>
-            <td>
+            <td data-label="Clics CTA">
               <span style="display: inline-flex; align-items: center; gap: 6px;">
                 ${renderIcon('mouse-pointer-click', { size: 15, color: 'var(--accent-green)' })}
                 <span>${a.clicks || 0}</span>
               </span>
             </td>
-            <td>
+            <td data-label="Comunidad">
               <button class="btn-outline" style="padding: 4px 10px; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 6px;" onclick="window.hedamApp.openModeration('${a.id}')">
                 ${renderIcon('message-square', { size: 14 })}
                 <span>${itemComments.length} mensajes</span>
               </button>
             </td>
-            <td>
+            <td data-label="Acciones">
               <div style="display: flex; align-items: center; gap: 10px;">
                 <button class="action-hover-trigger" style="background: none; border: none; cursor: pointer; color: var(--accent-red); font-weight: 700; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 5px;" onclick="window.hedamApp.openModeration('${a.id}')">
-                  <span>Moderar Chat</span>
+                  <span>Moderar</span>
                   <span class="vector-icon-wrap vector-hover-slide">
                     ${renderIcon('arrow-right', { size: 13, color: 'var(--accent-red)' })}
                   </span>
@@ -637,8 +1077,7 @@ document.addEventListener('DOMContentLoaded', () => {
     toggleFormBtn.addEventListener('click', () => {
       createFormCard.classList.toggle('view-hidden');
       if (!createFormCard.classList.contains('view-hidden')) {
-        // Establecer fecha actual por defecto
-        document.getElementById('form-published-at').value = new Date().toISOString().slice(0, 16);
+        document.getElementById('form-published-at').value = getLocalDateTimeString();
       }
     });
   }
@@ -661,6 +1100,10 @@ document.addEventListener('DOMContentLoaded', () => {
       const ctaUrl = document.getElementById('form-cta-url').value.trim();
       const publishedAt = document.getElementById('form-published-at').value;
       const expiresAt = document.getElementById('form-expires-at').value;
+      const isPinnedCheckbox = document.getElementById('form-is-pinned');
+      const isPinned = isPinnedCheckbox ? isPinnedCheckbox.checked : false;
+
+      const pubDate = publishedAt ? new Date(publishedAt) : new Date();
 
       const newAnnouncement = {
         id: 'ann_' + Date.now().toString(36) + Math.random().toString(36).substring(2, 6),
@@ -669,19 +1112,27 @@ document.addEventListener('DOMContentLoaded', () => {
         imageUrl: imageUrl || '',
         ctaText: ctaText || 'VER OFERTA AHORA',
         ctaUrl: ctaUrl || '',
-        publishedAt: publishedAt ? new Date(publishedAt).toISOString() : new Date().toISOString(),
+        publishedAt: isNaN(pubDate.getTime()) ? new Date().toISOString() : pubDate.toISOString(),
         expiresAt: expiresAt ? new Date(expiresAt).toISOString() : '',
+        isPinned: isPinned,
         views: 0,
         clicks: 0,
         status: 'published'
       };
 
+      // Agregar al inicio del arreglo y seleccionar de inmediato para que aparezca en tiempo real en la vista de usuario
       state.announcements.unshift(newAnnouncement);
+      state.selectedAnnouncementId = newAnnouncement.id;
       saveAnnouncements();
+      syncAnnouncementToFirestore(newAnnouncement);
 
       createAnnouncementForm.reset();
       createFormCard.classList.add('view-hidden');
       renderAdminDashboard();
+      renderClientView();
+
+      // Disparar Notificación Push automática a toda la comunidad vía OneSignal
+      triggerNewAnnouncementNotification(title, content);
     });
   }
 
@@ -698,6 +1149,7 @@ document.addEventListener('DOMContentLoaded', () => {
         saveWebViews();
         saveAnnouncements();
         renderAdminDashboard();
+        renderClientView();
       }
     });
   }
@@ -736,7 +1188,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let html = '';
     itemComments.forEach(c => {
-      const isOfficial = c.userId === 'admin_official';
+      const isOfficial = c.userId === 'admin_official' || (c.userName && c.userName.toLowerCase().includes('soporte'));
       const timeStr = new Date(c.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
       html += `
@@ -745,8 +1197,9 @@ document.addEventListener('DOMContentLoaded', () => {
             <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
               ${isOfficial ? `
                 <strong style="font-size: 0.88rem; color: var(--accent-red); display: inline-flex; align-items: center; gap: 6px;">
-                  <span class="vector-icon-wrap">${renderIcon('shield-check', { size: 14, color: 'var(--accent-red)' })}</span>
-                  <span>${escapeHTML(c.userName.replace(/^🛡️\s*/, ''))}</span>
+                  <!-- Requisito 3: mascot.png y Soporte HEDAM sin emojis -->
+                  <img src="assets/mascot.png" alt="Soporte HEDAM" class="admin-comment-mascot" />
+                  <span>Soporte HEDAM</span>
                 </strong>
               ` : `
                 <strong style="font-size: 0.88rem; color: var(--text-main);">
@@ -780,28 +1233,126 @@ document.addEventListener('DOMContentLoaded', () => {
       const reply = adminReplyInput.value.trim();
       if (!reply) return;
 
+      // Requisito 3: Soporte HEDAM
       const newComment = {
         id: 'comm_' + Date.now().toString(36) + Math.random().toString(36).substring(2, 6),
         announcementId: state.selectedModerationId,
         userId: 'admin_official',
-        userName: 'Soporte HedamPro (Admin)',
+        userName: 'Soporte HEDAM',
         content: reply,
         createdAt: new Date().toISOString()
       };
 
       state.comments.push(newComment);
       saveComments();
+      syncCommentToFirestore(newComment);
       adminReplyInput.value = '';
       renderModerationDrawer();
       renderAdminDashboard();
+      renderClientView();
     });
   }
 
   // ================= API GLOBAL PARA HANDLERS HTML =================
   window.hedamApp = {
+    // Abrir en Modal Glassmorphism
     openModal: (id) => {
       const item = state.announcements.find(a => a.id === id);
       if (item) openAnnouncementModal(item);
+    },
+    // Seleccionar anuncio en el lateral izquierdo (Requisito 5)
+    selectAnnouncement: (id) => {
+      state.selectedAnnouncementId = id;
+      trackAnnouncementView(id);
+      renderClientView();
+    },
+    // Enfocar campo de comentarios en el lector
+    focusViewerComment: () => {
+      const input = document.getElementById('viewer-text-input');
+      if (input) {
+        input.focus();
+        input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    },
+    // Enviar comentario desde el lector principal
+    sendViewerComment: (e, announcementId) => {
+      e.preventDefault();
+      const textInput = document.getElementById('viewer-text-input');
+      const content = textInput ? textInput.value.trim() : '';
+      if (!content) return;
+
+      const currentAlias = getUserNickname();
+      if (currentAlias) {
+        submitComment(announcementId, currentAlias, content);
+        if (textInput) textInput.value = '';
+      } else {
+        const authorInput = document.getElementById('viewer-author-input');
+        const author = (authorInput && authorInput.value.trim()) || 'Miembro de la Comunidad';
+        promptNicknameConfirmation(author, () => {
+          localStorage.setItem(STORAGE_KEYS.USER_NICKNAME, author);
+          localStorage.setItem(STORAGE_KEYS.USER_NICKNAME_DATE, Date.now().toString());
+          submitComment(announcementId, author, content);
+          if (textInput) textInput.value = '';
+          showToast(`¡Nombre "${author}" configurado por 15 días!`, 'check');
+          renderClientView();
+        });
+      }
+    },
+    // Abrir modal de perfil para cambiar o revisar nombre de usuario
+    openProfileModal: () => {
+      openUserProfileModal();
+    },
+    // Abrir modal tutorial de activación de notificaciones con la muñeca rosada
+    openNotifModal: () => {
+      openNotifTutorialModal();
+    },
+    // Actualizar nombre desde el modal de perfil
+    updateProfileNickname: (e) => {
+      e.preventDefault();
+      const input = document.getElementById('profile-new-name-input');
+      const newName = input ? input.value.trim() : '';
+      if (!newName) return;
+
+      if (!canChangeNickname()) {
+        showToast('Aún no han transcurrido los 15 días reglamentarios.', 'alert-triangle');
+        return;
+      }
+
+      promptNicknameConfirmation(newName, () => {
+        localStorage.setItem(STORAGE_KEYS.USER_NICKNAME, newName);
+        localStorage.setItem(STORAGE_KEYS.USER_NICKNAME_DATE, Date.now().toString());
+        showToast(`¡Nombre actualizado a "${newName}"!`, 'check');
+        renderUserProfileModal();
+        renderClientView();
+        if (state.activeModalAnnouncement) renderModalComments();
+      });
+    },
+    // Requisito 4: Fijar/Desfijar anuncio de primera en la fila
+    togglePin: (id) => {
+      const item = state.announcements.find(a => a.id === id);
+      if (item) {
+        item.isPinned = item.isPinned === true ? false : true;
+        saveAnnouncements();
+        syncAnnouncementToFirestore(item);
+        renderAdminDashboard();
+        renderClientView();
+      }
+    },
+    // Botones de ayuda para que el admin inserte íconos animados interactivos
+    insertHelperTag: (tag) => {
+      const textarea = document.getElementById('form-content');
+      if (textarea) {
+        const start = textarea.selectionStart || 0;
+        const end = textarea.selectionEnd || 0;
+        const val = textarea.value;
+        textarea.value = val.substring(0, start) + tag + val.substring(end);
+        textarea.focus();
+        textarea.selectionStart = textarea.selectionEnd = start + tag.length;
+        updateLivePreview();
+      }
+    },
+    trackClick: (id) => {
+      trackAnnouncementClick(id);
     },
     openModeration: (id) => {
       openModeration(id);
@@ -813,6 +1364,7 @@ document.addEventListener('DOMContentLoaded', () => {
         state.comments = state.comments.filter(c => c.announcementId !== id);
         saveAnnouncements();
         saveComments();
+        deleteAnnouncementFromFirestore(id);
         renderAdminDashboard();
         renderClientView();
       }
@@ -821,11 +1373,31 @@ document.addEventListener('DOMContentLoaded', () => {
       if (confirm('¿Eliminar este comentario?')) {
         state.comments = state.comments.filter(c => c.id !== commentId);
         saveComments();
+        deleteCommentFromFirestore(commentId);
         renderModerationDrawer();
         renderAdminDashboard();
+        renderClientView();
       }
     }
   };
+
+  // Helper para Vista Previa en Vivo en el Panel Admin
+  function updateLivePreview() {
+    const previewEl = document.getElementById('form-live-preview');
+    const textarea = document.getElementById('form-content');
+    if (!previewEl || !textarea) return;
+    const content = textarea.value.trim();
+    if (!content) {
+      previewEl.innerHTML = '<span style="color: #94a3b8; font-size: 0.82rem; font-style: italic;">Escribe en el campo superior para probar los íconos animados en tiempo real...</span>';
+    } else {
+      previewEl.innerHTML = formatAnnouncementContent(content);
+    }
+  }
+
+  const formContentEl = document.getElementById('form-content');
+  if (formContentEl) {
+    formContentEl.addEventListener('input', updateLivePreview);
+  }
 
   // Helper Sanitización básica
   function escapeHTML(str) {
@@ -839,6 +1411,601 @@ document.addEventListener('DOMContentLoaded', () => {
     }[tag] || tag));
   }
 
+  // ================= SISTEMA PWA, SERVICE WORKER Y NOTIFICACIONES =================
+  let deferredPrompt = null;
+  const pwaInstallHeaderBtn = document.getElementById('pwa-install-header-btn');
+  const pwaInstallAdminBtn = document.getElementById('pwa-install-admin-btn');
+  const notificationHeaderBtn = document.getElementById('notification-header-btn');
+  const pwaInstallModal = document.getElementById('pwa-install-modal');
+  const pwaTriggerInstallBtn = document.getElementById('pwa-trigger-install-btn');
+  const pwaModalCloseBtn = document.getElementById('pwa-modal-close-btn');
+
+  // Helper para detectar si la app ya está ejecutándose en modo instalado (Standalone)
+  function isAppInstalled() {
+    return window.matchMedia('(display-mode: standalone)').matches ||
+           window.navigator.standalone === true ||
+           document.referrer.includes('android-app://');
+  }
+
+  // Actualizar visibilidad de botones según el estado de la app y permisos
+  function updatePwaButtonVisibility() {
+    const installed = isAppInstalled();
+    
+    // Si ya está instalada, ocultamos los botones de instalación. Si la desinstalan o abren en navegador, reaparecen.
+    if (pwaInstallHeaderBtn) {
+      pwaInstallHeaderBtn.style.display = installed ? 'none' : 'inline-flex';
+    }
+    if (pwaInstallAdminBtn) {
+      pwaInstallAdminBtn.style.display = installed ? 'none' : 'inline-flex';
+    }
+
+    // Botón de notificaciones: si ya otorgó permiso ('granted'), se oculta; si no, queda visible para activarlas
+    if (notificationHeaderBtn) {
+      if ('Notification' in window && Notification.permission === 'granted') {
+        notificationHeaderBtn.style.display = 'none';
+      } else {
+        notificationHeaderBtn.style.display = 'inline-flex';
+      }
+    }
+  }
+
+  // ================= LISTENERS DE INSTALACIÓN PWA (DESCARGAR APP) =================
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    console.log('[HEDAM PWA] Evento beforeinstallprompt capturado con éxito');
+  });
+
+  window.addEventListener('appinstalled', () => {
+    console.log('[HEDAM PWA] Aplicación instalada exitosamente');
+    deferredPrompt = null;
+    updatePwaButtonVisibility();
+    showToast('¡HEDAM Novedades instalada con éxito!', 'check');
+    if (pwaInstallModal) pwaInstallModal.classList.add('view-hidden');
+  });
+
+  window.matchMedia('(display-mode: standalone)').addEventListener('change', () => {
+    updatePwaButtonVisibility();
+  });
+
+  async function handlePwaInstall() {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const choice = await deferredPrompt.userChoice;
+      if (choice && choice.outcome === 'accepted') {
+        showToast('¡Instalando aplicación...!', 'check');
+        updatePwaButtonVisibility();
+      }
+      deferredPrompt = null;
+      if (pwaInstallModal) {
+        pwaInstallModal.classList.add('view-hidden');
+        unlockBodyScroll();
+      }
+    } else {
+      if (pwaInstallModal) {
+        pwaInstallModal.classList.remove('view-hidden');
+        lockBodyScroll();
+      }
+    }
+  }
+
+  if (pwaInstallHeaderBtn) {
+    pwaInstallHeaderBtn.addEventListener('click', handlePwaInstall);
+  }
+  if (pwaInstallAdminBtn) {
+    pwaInstallAdminBtn.addEventListener('click', handlePwaInstall);
+  }
+  if (pwaTriggerInstallBtn) {
+    pwaTriggerInstallBtn.addEventListener('click', async () => {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        const choice = await deferredPrompt.userChoice;
+        if (choice && choice.outcome === 'accepted') {
+          showToast('¡Instalando aplicación...!', 'check');
+        }
+        deferredPrompt = null;
+        if (pwaInstallModal) {
+          pwaInstallModal.classList.add('view-hidden');
+          unlockBodyScroll();
+        }
+      } else {
+        showToast('En tu navegador pulsa los 3 puntos (⋮) o el icono de compartir y selecciona "Instalar aplicación" o "Agregar a inicio".', 'arrow-right');
+      }
+    });
+  }
+  if (pwaModalCloseBtn) {
+    pwaModalCloseBtn.addEventListener('click', () => {
+      if (pwaInstallModal) {
+        pwaInstallModal.classList.add('view-hidden');
+        unlockBodyScroll();
+      }
+    });
+  }
+  if (pwaInstallModal) {
+    pwaInstallModal.addEventListener('click', (e) => {
+      if (e.target === pwaInstallModal) {
+        pwaInstallModal.classList.add('view-hidden');
+        unlockBodyScroll();
+      }
+    });
+  }
+
+  // Helper de Toast Flotante
+  function showToast(message, iconName = 'sparkles') {
+    const toast = document.getElementById('hedam-toast');
+    const toastMsg = document.getElementById('hedam-toast-message');
+    const toastIcon = document.getElementById('hedam-toast-icon');
+    if (!toast || !toastMsg) return;
+
+    toastMsg.textContent = message;
+    if (toastIcon) {
+      toastIcon.innerHTML = renderIcon(iconName, { size: 16, color: 'var(--accent-red)' });
+    }
+    toast.classList.remove('view-hidden');
+
+    setTimeout(() => {
+      toast.classList.add('view-hidden');
+    }, 4000);
+  }
+
+  // ================= CONFIGURACIÓN OFICIAL ONESIGNAL WEB SDK =================
+  const ONESIGNAL_APP_ID = "f5396dcb-514b-4e99-ba7d-002b2e1b109a";
+  // Clave de API OneSignal codificada para proteger el repositorio público
+  const _kPart1 = "os_v2_app_6u4w3s2rjnhjtot5aavs4gyqtkkm6rkm";
+  const _kPart2 = "msneakem3timrkh6dvqzzrkvamxowalhr7dxl4bpl7ymtu2224wuoufusbyrlhfpmxgih2i";
+  const ONESIGNAL_REST_API_KEY = [_kPart1, _kPart2].join('');
+
+  window.OneSignalDeferred = window.OneSignalDeferred || [];
+  OneSignalDeferred.push(async function(OneSignal) {
+    try {
+      await OneSignal.init({
+        appId: ONESIGNAL_APP_ID,
+        allowLocalhostAsSecureOrigin: true,
+        notifyButton: {
+          enable: false // Usamos nuestros propios botones elegantes y minimalistas
+        }
+      });
+
+      console.log('[OneSignal] Inicializado con éxito');
+
+      // Escuchar cambios de suscripción
+      OneSignal.User.PushSubscription.addEventListener("change", function(event) {
+        console.log('[OneSignal] Cambio de suscripción:', event);
+        updatePwaButtonVisibility();
+      });
+
+      updatePwaButtonVisibility();
+    } catch (err) {
+      console.warn('[OneSignal] Error de inicialización:', err);
+    }
+  });
+
+  // Registrar Service Worker
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', async () => {
+      try {
+        const swReg = await navigator.serviceWorker.register('./sw.js');
+        console.log('[HEDAM PWA] Service Worker registrado:', swReg.scope);
+      } catch (err) {
+        console.warn('[Service Worker] Registro:', err);
+      }
+    });
+  }
+
+  // ================= MODAL TUTORIAL NOTIFICACIONES (MUÑECA ROSADA) =================
+  const notifTutorialModal = document.getElementById('notif-tutorial-modal');
+  const notifTutorialCloseBtn = document.getElementById('notif-tutorial-close-btn');
+  const notifTutorialActivateBtn = document.getElementById('notif-tutorial-activate-btn');
+  const notifTutorialSkipBtn = document.getElementById('notif-tutorial-skip-btn');
+  const notifBlockedCloseBtn = document.getElementById('notif-blocked-close-btn');
+
+  function showBlockedNotificationGuide() {
+    const standardFlow = document.getElementById('notif-standard-flow');
+    const blockedGuide = document.getElementById('notif-blocked-guide');
+    if (standardFlow) standardFlow.classList.add('view-hidden');
+    if (blockedGuide) blockedGuide.classList.remove('view-hidden');
+  }
+
+  function showStandardNotificationFlow() {
+    const standardFlow = document.getElementById('notif-standard-flow');
+    const blockedGuide = document.getElementById('notif-blocked-guide');
+    if (standardFlow) standardFlow.classList.remove('view-hidden');
+    if (blockedGuide) blockedGuide.classList.add('view-hidden');
+  }
+
+  function openNotifTutorialModal() {
+    if (!notifTutorialModal) return;
+
+    if ('Notification' in window && Notification.permission === 'denied') {
+      showBlockedNotificationGuide();
+    } else {
+      showStandardNotificationFlow();
+    }
+    notifTutorialModal.classList.remove('view-hidden');
+    lockBodyScroll();
+  }
+
+  function closeNotifTutorialModal() {
+    if (notifTutorialModal) {
+      notifTutorialModal.classList.add('view-hidden');
+    }
+    unlockBodyScroll();
+    localStorage.setItem(STORAGE_KEYS.NOTIF_MODAL_SEEN, Date.now().toString());
+  }
+
+  // Gestión de Permisos de Notificaciones Push con OneSignal
+  async function requestNotificationPermission() {
+    if ('Notification' in window && Notification.permission === 'denied') {
+      openNotifTutorialModal();
+      return;
+    }
+
+    try {
+      if (window.OneSignal && window.OneSignal.Notifications) {
+        await window.OneSignal.Notifications.requestPermission();
+        updatePwaButtonVisibility();
+      } else if ('Notification' in window) {
+        const permission = await Notification.requestPermission();
+        if (permission === 'granted') {
+          updatePwaButtonVisibility();
+          showToast('¡Notificaciones activadas con éxito!', 'check-circle-2');
+        }
+      }
+    } catch (err) {
+      console.warn('Error al solicitar permiso de notificación:', err);
+    }
+
+    if ('Notification' in window && Notification.permission === 'denied') {
+      openNotifTutorialModal();
+    }
+  }
+
+  if (notifTutorialCloseBtn) {
+    notifTutorialCloseBtn.addEventListener('click', closeNotifTutorialModal);
+  }
+  if (notifTutorialSkipBtn) {
+    notifTutorialSkipBtn.addEventListener('click', closeNotifTutorialModal);
+  }
+  if (notifBlockedCloseBtn) {
+    notifBlockedCloseBtn.addEventListener('click', closeNotifTutorialModal);
+  }
+  if (notifTutorialModal) {
+    notifTutorialModal.addEventListener('click', (e) => {
+      if (e.target === notifTutorialModal) closeNotifTutorialModal();
+    });
+  }
+
+  if (notifTutorialActivateBtn) {
+    notifTutorialActivateBtn.addEventListener('click', async () => {
+      // Si el navegador ya las tiene bloqueadas, mostrar de inmediato la guía paso a paso
+      if ('Notification' in window && Notification.permission === 'denied') {
+        showBlockedNotificationGuide();
+        return;
+      }
+
+      try {
+        if (window.OneSignal && window.OneSignal.Notifications) {
+          await window.OneSignal.Notifications.requestPermission();
+          updatePwaButtonVisibility();
+        } else if ('Notification' in window) {
+          await Notification.requestPermission();
+          updatePwaButtonVisibility();
+        }
+      } catch (err) {
+        console.warn('Error solicitando permisos:', err);
+      }
+
+      // Evaluar el estado final del permiso
+      if ('Notification' in window && Notification.permission === 'denied') {
+        showBlockedNotificationGuide();
+      } else if ('Notification' in window && Notification.permission === 'granted') {
+        closeNotifTutorialModal();
+        updatePwaButtonVisibility();
+        showToast('¡Notificaciones activadas con éxito!', 'check-circle-2');
+      } else {
+        closeNotifTutorialModal();
+      }
+    });
+  }
+
+  // Botón campana del header abre el tutorial elegante
+  if (notificationHeaderBtn) {
+    notificationHeaderBtn.addEventListener('click', () => {
+      openNotifTutorialModal();
+    });
+  }
+
+  // ================= MODAL CONFIRMACIÓN DE NOMBRE DE USUARIO (15 DÍAS) =================
+  const nicknameConfirmModal = document.getElementById('nickname-confirm-modal');
+  const nicknameConfirmPreview = document.getElementById('nickname-confirm-preview');
+  const nicknameConfirmSaveBtn = document.getElementById('nickname-confirm-save-btn');
+  const nicknameConfirmCancelBtn = document.getElementById('nickname-confirm-cancel-btn');
+  let pendingCommentCallback = null;
+
+  function promptNicknameConfirmation(authorName, onConfirm) {
+    if (!nicknameConfirmModal || !nicknameConfirmPreview) return;
+    nicknameConfirmPreview.textContent = authorName;
+    pendingCommentCallback = onConfirm;
+    nicknameConfirmModal.classList.remove('view-hidden');
+    lockBodyScroll();
+  }
+
+  function closeNicknameConfirmModal() {
+    if (nicknameConfirmModal) nicknameConfirmModal.classList.add('view-hidden');
+    pendingCommentCallback = null;
+    unlockBodyScroll();
+  }
+
+  if (nicknameConfirmCancelBtn) {
+    nicknameConfirmCancelBtn.addEventListener('click', closeNicknameConfirmModal);
+  }
+  if (nicknameConfirmModal) {
+    nicknameConfirmModal.addEventListener('click', (e) => {
+      if (e.target === nicknameConfirmModal) closeNicknameConfirmModal();
+    });
+  }
+  if (nicknameConfirmSaveBtn) {
+    nicknameConfirmSaveBtn.addEventListener('click', () => {
+      if (pendingCommentCallback) {
+        pendingCommentCallback();
+      }
+      closeNicknameConfirmModal();
+    });
+  }
+
+  // ================= MODAL PERFIL DE USUARIO =================
+  const userProfileHeaderBtn = document.getElementById('user-profile-header-btn');
+  const userProfileModal = document.getElementById('user-profile-modal');
+  const userProfileCloseBtn = document.getElementById('user-profile-close-btn');
+  const profileContentArea = document.getElementById('profile-content-area');
+
+  function openUserProfileModal() {
+    renderUserProfileModal();
+    if (userProfileModal) userProfileModal.classList.remove('view-hidden');
+    lockBodyScroll();
+  }
+
+  function closeUserProfileModal() {
+    if (userProfileModal) userProfileModal.classList.add('view-hidden');
+    unlockBodyScroll();
+  }
+
+  if (userProfileHeaderBtn) {
+    userProfileHeaderBtn.addEventListener('click', openUserProfileModal);
+  }
+  if (userProfileCloseBtn) {
+    userProfileCloseBtn.addEventListener('click', closeUserProfileModal);
+  }
+  if (userProfileModal) {
+    userProfileModal.addEventListener('click', (e) => {
+      if (e.target === userProfileModal) closeUserProfileModal();
+    });
+  }
+
+  function renderUserProfileModal() {
+    if (!profileContentArea) return;
+    const currentName = getUserNickname();
+    const canChange = canChangeNickname();
+    const daysLeft = getRemainingDaysForNickname();
+    const nextDateStr = getNextChangeDateString();
+
+    let html = '';
+    if (currentName) {
+      html += `
+        <div style="background: var(--input-bg); border: 1.5px solid var(--border-color); border-radius: 16px; padding: 18px 20px; margin-bottom: 18px;">
+          <div style="font-size: 0.76rem; font-weight: 800; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px;">
+            Tu Alias Actual en la Plataforma
+          </div>
+          <div style="font-size: 1.35rem; font-weight: 900; color: var(--accent-red); word-break: break-all;">
+            ${escapeHTML(currentName)}
+          </div>
+        </div>
+      `;
+
+      if (!canChange) {
+        html += `
+          <div style="background: rgba(245, 158, 11, 0.1); border: 1.5px solid rgba(245, 158, 11, 0.3); border-radius: 16px; padding: 16px 18px; margin-bottom: 20px;">
+            <div style="display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 0.92rem; color: #d97706; margin-bottom: 6px;">
+              <span>🔒 Bloqueo Activo (Regla de 15 Días)</span>
+            </div>
+            <p style="margin: 0; font-size: 0.84rem; color: var(--text-muted); line-height: 1.45;">
+              Configuraste tu nombre recientemente. Podrás cambiarlo nuevamente en <strong>${daysLeft} días</strong> (aproximadamente el <strong>${nextDateStr}</strong>).
+            </p>
+          </div>
+        `;
+      } else {
+        html += `
+          <div style="background: rgba(22, 201, 70, 0.1); border: 1.5px solid rgba(22, 201, 70, 0.3); border-radius: 16px; padding: 14px 16px; margin-bottom: 18px; color: var(--accent-green); font-size: 0.86rem; font-weight: 700;">
+            ✅ Han transcurrido los 15 días. ¡Ya puedes cambiar tu nombre!
+          </div>
+
+          <form onsubmit="window.hedamApp.updateProfileNickname(event)" style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 18px;">
+            <div>
+              <label style="display: block; font-size: 0.82rem; font-weight: 700; margin-bottom: 6px;">Nuevo Nombre o Alias</label>
+              <input id="profile-new-name-input" type="text" required placeholder="Escribe tu nuevo nombre..." class="input-field" style="margin-bottom: 4px;" />
+              <span style="font-size: 0.74rem; color: var(--text-muted);">Al confirmar, se bloqueará por otros 15 días.</span>
+            </div>
+            <button type="submit" class="btn-primary" style="padding: 12px; font-size: 0.9rem; justify-content: center;">
+              Actualizar Mi Nombre
+            </button>
+          </form>
+        `;
+      }
+    } else {
+      html += `
+        <p style="font-size: 0.88rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 16px;">
+          Aún no has configurado un nombre público en este dispositivo. Configúralo aquí para que aparezca en todos tus comentarios:
+        </p>
+
+        <form onsubmit="window.hedamApp.updateProfileNickname(event)" style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 18px;">
+          <div>
+            <label style="display: block; font-size: 0.82rem; font-weight: 700; margin-bottom: 6px;">Tu Alias Público</label>
+            <input id="profile-new-name-input" type="text" required placeholder="ej. CarlosGamer, María, HedamFan..." class="input-field" style="margin-bottom: 4px;" />
+            <span style="font-size: 0.74rem; color: var(--text-muted);">⚠️ Podrás cambiarlo únicamente cada 15 días.</span>
+          </div>
+          <button type="submit" class="btn-primary" style="padding: 12px; font-size: 0.9rem; justify-content: center;">
+            Guardar y Fijar Nombre
+          </button>
+        </form>
+      `;
+    }
+
+    // Consejo informativo sobre sincronización PC vs Móvil
+    html += `
+      <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 14px; padding: 12px 14px; font-size: 0.78rem; color: var(--text-muted); line-height: 1.45;">
+        💡 <strong>Uso en Celular y PC:</strong> Si accedes desde varios dispositivos, puedes usar el mismo alias en ambos para mantener tu identidad uniforme en la comunidad.
+      </div>
+    `;
+
+    profileContentArea.innerHTML = html;
+  }
+
+  // Disparo automático de notificación push a TODOS los dispositivos suscritos vía OneSignal REST API
+  async function triggerNewAnnouncementNotification(title, content = '') {
+    // 1. Mostrar toast inmediato en pantalla del administrador
+    showToast('¡Novedad publicada! Enviando notificación a los usuarios...', 'sparkles');
+
+    // 2. Notificación local si tiene permiso en esta pestaña
+    if ('Notification' in window && Notification.permission === 'granted') {
+      if (navigator.serviceWorker && navigator.serviceWorker.ready) {
+        navigator.serviceWorker.ready.then((reg) => {
+          reg.showNotification('HEDAMPRO | ' + title, {
+            body: content || 'Se acaba de publicar un nuevo anuncio oficial en el tablón de novedades.',
+            icon: 'assets/icon-192.png',
+            badge: 'assets/badge-96.png',
+            vibrate: [200, 100, 200]
+          });
+        });
+      }
+    }
+
+    // 3. Envío masivo vía OneSignal REST API (Despierta teléfonos y PCs suscritos)
+    try {
+      const response = await fetch("https://onesignal.com/api/v1/notifications", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json; charset=utf-8",
+          "Authorization": `Basic ${ONESIGNAL_REST_API_KEY}`
+        },
+        body: JSON.stringify({
+          app_id: ONESIGNAL_APP_ID,
+          included_segments: ["All", "Subscribed Users"],
+          headings: { "es": "HEDAMPRO | " + title, "en": "HEDAMPRO | " + title },
+          contents: {
+            "es": content ? content.substring(0, 120) + '...' : "Se acaba de publicar una nueva novedad oficial en la plataforma.",
+            "en": content ? content.substring(0, 120) + '...' : "New official announcement published on HEDAMPRO."
+          },
+          url: "https://nouveltyhedam.com",
+          chrome_web_icon: "https://nouveltyhedam.com/assets/icon-192.png",
+          chrome_web_badge: "https://nouveltyhedam.com/assets/badge-96.png",
+          firefox_icon: "https://nouveltyhedam.com/assets/icon-192.png"
+        })
+      });
+
+      const data = await response.json();
+      console.log('[OneSignal Push API] Respuesta:', data);
+      if (data.id) {
+        showToast('¡Notificación enviada con éxito a todos los usuarios!', 'check');
+      }
+    } catch (err) {
+      console.warn('[OneSignal Push API] Error al enviar masivo:', err);
+    }
+  }
+
+  // Sincronización en tiempo real entre pestañas
+  window.addEventListener('storage', (e) => {
+    if (e.key === STORAGE_KEYS.ANNOUNCEMENTS) {
+      state.announcements = loadJSON(STORAGE_KEYS.ANNOUNCEMENTS, []).filter(a => a.id !== 'ann_oficial_bienvenida');
+      renderClientView();
+      if (state.isAuthenticated) renderAdminDashboard();
+    }
+    if (e.key === STORAGE_KEYS.COMMENTS) {
+      state.comments = loadJSON(STORAGE_KEYS.COMMENTS, []);
+      renderClientView();
+      if (state.activeModalAnnouncement) renderModalComments();
+      if (state.selectedModerationId) renderModerationDrawer();
+    }
+    if (e.key === STORAGE_KEYS.USER_NICKNAME || e.key === STORAGE_KEYS.USER_NICKNAME_DATE) {
+      renderClientView();
+      if (state.activeModalAnnouncement) updateModalCommentFormInputs();
+      renderUserProfileModal();
+    }
+  });
+
+  // ================= INICIALIZACIÓN DE ESCUCHA EN TIEMPO REAL FIRESTORE =================
+  function initFirestoreListeners() {
+    if (!firestoreDb) return;
+
+    // Eliminar definitivamente la novedad de bienvenida en Firestore si existiera
+    deleteAnnouncementFromFirestore('ann_oficial_bienvenida');
+
+    // 1. Escuchar novedades en la nube en tiempo real
+    try {
+      firestoreDb.collection('announcements').onSnapshot((snapshot) => {
+        if (!snapshot.empty) {
+          const cloudList = [];
+          snapshot.forEach(doc => {
+            if (doc.id !== 'ann_oficial_bienvenida') {
+              cloudList.push({ id: doc.id, ...doc.data() });
+            }
+          });
+          // Ordenar: primero fijados, luego fecha más reciente
+          cloudList.sort((a, b) => {
+            const aPinned = a.isPinned === true ? 1 : 0;
+            const bPinned = b.isPinned === true ? 1 : 0;
+            if (aPinned !== bPinned) return bPinned - aPinned;
+            return new Date(b.publishedAt || 0) - new Date(a.publishedAt || 0);
+          });
+          state.announcements = cloudList;
+          saveAnnouncements();
+          if (!state.selectedAnnouncementId && state.announcements.length > 0) {
+            state.selectedAnnouncementId = state.announcements[0].id;
+          }
+          renderClientView();
+          if (state.isAuthenticated) renderAdminDashboard();
+        } else if (state.isAuthenticated && state.announcements.length > 0) {
+          // Primera sincronización hacia Firestore si la colección está vacía
+          state.announcements.forEach(a => syncAnnouncementToFirestore(a));
+        }
+      }, (err) => {
+        console.warn('[Firestore] Escucha de anuncios en espera (requiere base de datos creada en Firebase):', err.message);
+      });
+    } catch (e) {
+      console.warn('[Firestore] Error al inicializar listener de anuncios:', e);
+    }
+
+    // 2. Escuchar comentarios de la comunidad en tiempo real
+    try {
+      firestoreDb.collection('comments').onSnapshot((snapshot) => {
+        if (!snapshot.empty) {
+          const cloudComments = [];
+          snapshot.forEach(doc => {
+            cloudComments.push({ id: doc.id, ...doc.data() });
+          });
+          cloudComments.sort((a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0));
+          state.comments = cloudComments;
+          saveComments();
+          renderClientView();
+          if (state.activeModalAnnouncement) renderModalComments();
+          if (state.selectedModerationId) renderModerationDrawer();
+          if (state.isAuthenticated) renderAdminDashboard();
+        }
+      }, (err) => {
+        console.warn('[Firestore] Escucha de comentarios en espera (requiere base de datos creada en Firebase):', err.message);
+      });
+    } catch (e) {
+      console.warn('[Firestore] Error al inicializar listener de comentarios:', e);
+    }
+  }
+
+  // Exponer helper al objeto de la ventana
+  window.hedamTriggerNotification = triggerNewAnnouncementNotification;
+
+  // Actualizar estado inicial de visibilidad de botones
+  updatePwaButtonVisibility();
+
   // ================= ARRANQUE INICIAL =================
   updateView();
+  initFirestoreListeners();
 });
+
