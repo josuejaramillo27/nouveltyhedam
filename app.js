@@ -403,263 +403,126 @@ document.addEventListener('DOMContentLoaded', () => {
       openFeaturedBtn.onclick = () => openAnnouncementModal(activeList[0]);
     }
 
-    // Asegurar que haya una novedad seleccionada
-    if (!state.selectedAnnouncementId || !activeList.some(a => a.id === state.selectedAnnouncementId)) {
-      state.selectedAnnouncementId = activeList[0].id;
-    }
-
-    const selectedAnnouncement = activeList.find(a => a.id === state.selectedAnnouncementId) || activeList[0];
-    trackAnnouncementView(selectedAnnouncement.id);
-
-    // ================= 1. LATERAL IZQUIERDO =================
-    let sidebarHtml = `
-      <aside class="announcements-sidebar">
-        <div class="sidebar-header-box">
-          <div class="sidebar-header-title">
-            <span class="vector-icon-wrap anim-sparkle" style="color: var(--accent-red);">
-              ${renderIcon('sparkles', { size: 16, color: 'var(--accent-red)' })}
-            </span>
-            <span>Tablón de Novedades</span>
-          </div>
-          <span class="sidebar-count-badge">${activeList.length} activas</span>
-        </div>
-
-        <div class="sidebar-scroll-container">
-    `;
+    let cardsHtml = '<div class="novedades-grid">';
 
     activeList.forEach((item) => {
-      const isSelected = item.id === selectedAnnouncement.id;
       const commentsCount = state.comments.filter(c => c.announcementId === item.id).length;
-      const itemDate = new Date(item.publishedAt).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' });
+      const itemDate = new Date(item.publishedAt).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
       const itemPinned = item.isPinned === true;
+      const rawText = item.content ? item.content.replace(/[\n\r]+/g, ' ') : '';
+      const cleanExcerpt = escapeHTML(rawText.substring(0, 150)) + (rawText.length > 150 ? '...' : '');
 
-      sidebarHtml += `
-        <div class="sidebar-item-card ${isSelected ? 'sidebar-item-active' : ''}" onclick="window.hedamApp.selectAnnouncement('${item.id}')">
-          <div class="sidebar-item-top">
-            <span style="font-size: 0.76rem; color: var(--text-muted); font-weight: 700; display: inline-flex; align-items: center; gap: 5px;">
-              ${renderIcon('calendar', { size: 12, color: 'var(--text-muted)' })}
-              <span>${itemDate}</span>
-            </span>
-            ${itemPinned ? `
-              <span class="badge-pinned">
-                📌 Fijado
-              </span>` : ''}
-          </div>
-
-          <div class="sidebar-item-title">
-            ${escapeHTML(item.title)}
-          </div>
-
-          <div class="sidebar-item-excerpt">
-            ${escapeHTML(item.content)}
-          </div>
-
-          <div class="sidebar-item-meta">
-            <span class="badge-views" title="Lecturas públicas">
-              ${renderIcon('eye', { size: 13, color: 'var(--accent-red)' })}
-              <span>${item.views || 0} lecturas</span>
-            </span>
-            <span style="display: inline-flex; align-items: center; gap: 4px;" title="Comentarios">
-              ${renderIcon('message-square', { size: 13 })}
-              <span>${commentsCount}</span>
-            </span>
-          </div>
-        </div>
-      `;
-    });
-
-    sidebarHtml += `
-        </div>
-      </aside>
-    `;
-
-    // ================= 2. LECTOR PRINCIPAL (RESTO DE LA PANTALLA) =================
-    // Requisito 3: En la pantalla principal NO sale la mascota, solo en el pop-up.
-    const selectedComments = state.comments.filter(c => c.announcementId === selectedAnnouncement.id);
-    const selectedDate = new Date(selectedAnnouncement.publishedAt).toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' });
-    const selectedPinned = selectedAnnouncement.isPinned === true;
-
-    let mainViewerHtml = `
-      <main class="announcement-main-viewer">
-        <div class="viewer-card">
-
-          <!-- Badges de cabecera -->
-          <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 14px;">
-            <span style="background: var(--accent-red); color: white; padding: 5px 12px; border-radius: 9999px; font-size: 0.74rem; font-weight: 900; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 10px var(--accent-red-glow);">
-              <span class="vector-icon-wrap anim-shake">
-                ${renderIcon('megaphone', { size: 13, color: '#fff' })}
-              </span>
-              <span>NOVEDAD OFICIAL</span>
-            </span>
-
-            ${selectedPinned ? `
-              <span class="badge-pinned">
-                📌 FIJADO AL INICIO
-              </span>
-            ` : ''}
-
-            <!-- Requisito 2: Vistas públicas visibles para los usuarios -->
-            <span style="background: #f1f4f9; border: 1px solid #e1e7f0; color: #475569; padding: 4px 10px; border-radius: 9999px; font-size: 0.75rem; font-weight: 700; display: inline-flex; align-items: center; gap: 5px;">
-              ${renderIcon('eye', { size: 13, color: 'var(--accent-red)' })}
-              <span>${selectedAnnouncement.views || 0} lecturas públicas</span>
-            </span>
-
-            <span style="font-size: 0.78rem; color: #64748b; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; margin-left: auto;">
-              ${renderIcon('calendar', { size: 13, color: '#64748b' })}
-              <span>${selectedDate}</span>
-            </span>
-          </div>
-
-          <!-- Título Principal -->
-          <h2 style="font-size: 1.85rem; font-weight: 900; line-height: 1.22; color: #0e1118; text-transform: uppercase; margin-bottom: 20px;">
-            ${escapeHTML(selectedAnnouncement.title)}
-          </h2>
-
-          <!-- Imagen / Banner si existe -->
-          ${selectedAnnouncement.imageUrl ? `
-            <div style="margin-bottom: 22px;">
-              <img src="${escapeHTML(selectedAnnouncement.imageUrl)}" alt="Banner novedad" style="width: 100%; max-height: 280px; object-fit: cover; border-radius: 14px; border: 1.5px solid #e2e8f0;" />
+      cardsHtml += `
+        <article class="novedad-card ${itemPinned ? 'pinned-card' : ''}" onclick="window.hedamApp.openModal('${item.id}')" title="Clic para ver novedad completa en pop-up">
+          ${item.imageUrl ? `
+            <div class="novedad-card-image-wrap">
+              <img src="${escapeHTML(item.imageUrl)}" alt="${escapeHTML(item.title)}" class="novedad-card-img" loading="lazy" />
             </div>
           ` : ''}
 
-          <!-- Cuerpo formateado con viñetas y alertas -->
-          <div style="margin-bottom: 28px;">
-            ${formatAnnouncementContent(selectedAnnouncement.content)}
-          </div>
+          <div class="novedad-card-body">
+            <div class="novedad-card-top">
+              <span style="font-size: 0.76rem; color: var(--text-muted); font-weight: 700; display: inline-flex; align-items: center; gap: 5px;">
+                ${renderIcon('calendar', { size: 13, color: 'var(--text-muted)' })}
+                <span>${itemDate}</span>
+              </span>
 
-          <!-- Botones de Acción (CTA Personalizado + Comentar Novedad) -->
-          <div style="display: flex; gap: 14px; align-items: center; flex-wrap: wrap; padding-top: 18px; border-top: 2px solid #f1f4f9; margin-bottom: 26px;">
-            ${selectedAnnouncement.ctaUrl ? `
-              <a href="${escapeHTML(selectedAnnouncement.ctaUrl)}" target="_blank" class="btn-primary" onclick="window.hedamApp.trackClick('${selectedAnnouncement.id}')" style="flex: 1; min-width: 220px; padding: 14px 22px; font-size: 0.92rem; display: inline-flex; align-items: center; justify-content: center; gap: 8px;">
-                <span class="vector-icon-wrap vector-hover-bounce">
-                  ${renderIcon('external-link', { size: 16 })}
+              <div style="display: flex; align-items: center; gap: 6px;">
+                ${itemPinned ? `
+                  <span class="badge-pinned">
+                    📌 Fijado
+                  </span>
+                ` : `
+                  <span style="background: rgba(255, 30, 39, 0.08); color: var(--accent-red); font-size: 0.68rem; font-weight: 800; padding: 3px 8px; border-radius: 9999px; text-transform: uppercase;">
+                    Oficial
+                  </span>
+                `}
+              </div>
+            </div>
+
+            <h3 class="novedad-card-title">
+              ${escapeHTML(item.title)}
+            </h3>
+
+            <p class="novedad-card-excerpt">
+              ${cleanExcerpt}
+            </p>
+
+            <div class="novedad-card-footer">
+              <div class="novedad-card-stats">
+                <span title="Lecturas públicas" style="display: inline-flex; align-items: center; gap: 4px;">
+                  ${renderIcon('eye', { size: 14, color: 'var(--accent-red)' })}
+                  <span>${item.views || 0}</span>
                 </span>
-                <span>${escapeHTML(selectedAnnouncement.ctaText || 'VER AHORA')}</span>
+                <span title="Comentarios" style="display: inline-flex; align-items: center; gap: 4px;">
+                  ${renderIcon('message-square', { size: 14 })}
+                  <span>${commentsCount}</span>
+                </span>
+              </div>
+
+              <div class="novedad-card-btn">
+                <span>Ver Novedad</span>
                 <span class="vector-icon-wrap vector-hover-slide">
-                  ${renderIcon('arrow-right', { size: 16 })}
+                  ${renderIcon('arrow-right', { size: 13 })}
                 </span>
-              </a>
-            ` : ''}
-
-            <button type="button" class="btn-secondary" onclick="window.hedamApp.focusViewerComment()" style="flex: 1; min-width: 200px; padding: 14px 22px; font-size: 0.92rem; display: inline-flex; align-items: center; justify-content: center; gap: 8px;">
-              <span class="vector-icon-wrap vector-hover-bounce">
-                ${renderIcon('message-square', { size: 16 })}
-              </span>
-              <span>COMENTAR NOVEDAD</span>
-            </button>
-
-            <button type="button" class="btn-outline" onclick="window.hedamApp.openModal('${selectedAnnouncement.id}')" style="padding: 13px 18px; font-size: 0.88rem; color: #1e293b; border-color: #cbd5e1; display: inline-flex; align-items: center; gap: 7px;" title="Ver con fondo glassmorphism">
-              ${renderIcon('sparkles', { size: 14, color: 'var(--accent-red)' })}
-              <span>Pop-up</span>
-            </button>
-          </div>
-
-          <!-- Sección de Comentarios Integrada -->
-          <div style="background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 18px; padding: 22px 24px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
-              <h4 style="font-size: 1.05rem; font-weight: 800; color: #0e1118; margin: 0; display: flex; align-items: center; gap: 8px;">
-                <span style="color: var(--accent-red);">${renderIcon('message-square', { size: 16 })}</span>
-                <span>Hilo de Comentarios</span>
-              </h4>
-              <span style="font-size: 0.8rem; color: #64748b; font-weight: 700;">
-                ${selectedComments.length} mensajes
-              </span>
+              </div>
             </div>
-
-            <div id="viewer-comments-list" style="max-height: 230px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; padding-right: 4px;">
-    `;
-
-    if (selectedComments.length === 0) {
-      mainViewerHtml += `
-        <p style="color: #94a3b8; font-size: 0.88rem; text-align: center; padding: 18px 0; margin: 0;">
-          Aún no hay comentarios en esta novedad. ¡Sé el primero en participar!
-        </p>
+          </div>
+        </article>
       `;
-    } else {
-      selectedComments.forEach(c => {
-        const isOfficial = c.userId === 'admin_official' || (c.userName && c.userName.toLowerCase().includes('soporte'));
-        const timeStr = new Date(c.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    });
 
-        mainViewerHtml += `
-          <!-- Requisito 1: Fondo 100% sólido, nunca transparente, texto nítido -->
-          <div class="${isOfficial ? 'comment-card-admin' : 'comment-card-user'}">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-              ${isOfficial ? `
-                <div style="display: inline-flex; align-items: center; gap: 7px;">
-                  <img src="assets/mascot.png" alt="Soporte HEDAM" class="admin-comment-mascot" />
-                  <span style="font-weight: 800; font-size: 0.88rem; color: var(--accent-red);">Soporte HEDAM</span>
-                </div>
-              ` : `
-                <span style="font-weight: 800; font-size: 0.85rem; color: var(--accent-red);">${escapeHTML(c.userName)}</span>
-              `}
-              <span style="font-size: 0.74rem; color: #64748b; font-weight: 600;">${timeStr}</span>
-            </div>
-            <p style="margin: 6px 0 0; font-size: 0.92rem; color: #0f172a; font-weight: 600; line-height: 1.45;">${escapeHTML(c.content)}</p>
-          </div>
-        `;
-      });
+    cardsHtml += '</div>';
+
+    feedContainer.innerHTML = cardsHtml;
+
+    // Verificar y disparar automáticamente el pop-up de la novedad más reciente si aplica
+    checkAndTriggerAutoPopup();
+  }
+
+  // Comprobar y disparar la ventana emergente de la novedad automáticamente al entrar a la web
+  function checkAndTriggerAutoPopup() {
+    if (state.hasAutoShownModal || state.isAuthenticated) return;
+    const activeList = getActiveAnnouncements();
+    if (activeList.length === 0) return;
+
+    const lastSeenId = localStorage.getItem(STORAGE_KEYS.POPUP_LAST_ANNOUNCEMENT_ID);
+    const topAnnouncement = activeList[0];
+    const isNewAnnouncement = (topAnnouncement && topAnnouncement.id !== lastSeenId);
+
+    // 1. Si hay una nueva novedad no vista por el usuario, ¡mostrar pop-up de inmediato!
+    if (isNewAnnouncement) {
+      state.hasAutoShownModal = true;
+      setTimeout(() => {
+        openAnnouncementModal(topAnnouncement);
+        localStorage.setItem(STORAGE_KEYS.POPUP_LAST_SEEN, Date.now().toString());
+        localStorage.setItem(STORAGE_KEYS.POPUP_LAST_ANNOUNCEMENT_ID, topAnnouncement.id);
+      }, 450);
+      return;
     }
 
-    mainViewerHtml += `
-            </div>
+    // 2. Si ya vio la última novedad pero no tiene notificaciones activadas, invitar a activarlas
+    const notifAlreadyGranted = ('Notification' in window && Notification.permission === 'granted');
+    const notifModalSeen = parseInt(localStorage.getItem(STORAGE_KEYS.NOTIF_MODAL_SEEN) || '0', 10);
+    const NOTIF_COOLDOWN = 12 * 60 * 60 * 1000;
 
-            <!-- Formulario de Comentarios Integrado -->
-            <form onsubmit="window.hedamApp.sendViewerComment(event, '${selectedAnnouncement.id}')" style="display: flex; flex-direction: column; gap: 8px;">
-              <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                ${getUserNickname() ? `
-                  <div class="comment-author-badge" style="flex: 0 0 240px;">
-                    <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Comentando como: <strong>${escapeHTML(getUserNickname())}</strong></span>
-                    <button type="button" class="btn-change-alias" onclick="window.hedamApp.openProfileModal()" title="Gestionar alias de usuario">
-                      ${renderIcon('user', { size: 12 })} Perfil
-                    </button>
-                  </div>
-                ` : `
-                  <input id="viewer-author-input" type="text" required placeholder="Tu alias o nombre" style="flex: 0 0 160px; padding: 10px 14px; border-radius: 10px; border: 1.5px solid #cbd5e1; font-size: 0.85rem; outline: none; color: #0e1118; background: #ffffff;" />
-                `}
-                <input id="viewer-text-input" type="text" required placeholder="Escribe una opinión o consulta..." style="flex: 1; min-width: 200px; padding: 10px 14px; border-radius: 10px; border: 1.5px solid #cbd5e1; font-size: 0.85rem; outline: none; color: #0e1118; background: #ffffff;" />
-                <button type="submit" class="btn-primary" style="padding: 0 20px; border-radius: 10px; box-shadow: none; display: flex; align-items: center; justify-content: center; height: 42px;" title="Enviar">
-                  <span class="vector-icon-wrap vector-hover-slide">
-                    ${renderIcon('send', { size: 16 })}
-                  </span>
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      </main>
-    `;
-
-    feedContainer.innerHTML = sidebarHtml + mainViewerHtml;
-
-    // Requisito: Al entrar a la web, lo PRIMERO que hace es mostrar el elegante aviso tutorial
-    // con la muñeca rosada para activar notificaciones (si aún no las ha otorgado).
-    if (!state.hasAutoShownModal && !state.isAuthenticated) {
+    if (!notifAlreadyGranted && (Date.now() - notifModalSeen > NOTIF_COOLDOWN)) {
       state.hasAutoShownModal = true;
-      const notifAlreadyGranted = ('Notification' in window && Notification.permission === 'granted');
-      const notifModalSeen = parseInt(localStorage.getItem(STORAGE_KEYS.NOTIF_MODAL_SEEN) || '0', 10);
-      const NOTIF_COOLDOWN = 12 * 60 * 60 * 1000; // 12 horas
+      setTimeout(() => {
+        openNotifTutorialModal();
+      }, 450);
+      return;
+    }
 
-      if (!notifAlreadyGranted && (Date.now() - notifModalSeen > NOTIF_COOLDOWN)) {
-        setTimeout(() => {
-          openNotifTutorialModal();
-        }, 400);
-      } else if (activeList.length > 0) {
-        // Si ya tiene notificaciones concedidas o ya vio el aviso, flujo normal de pop-up si hay nueva
-        const lastSeenTimestamp = parseInt(localStorage.getItem(STORAGE_KEYS.POPUP_LAST_SEEN) || '0', 10);
-        const lastSeenId = localStorage.getItem(STORAGE_KEYS.POPUP_LAST_ANNOUNCEMENT_ID);
-        const topAnnouncement = activeList[0];
-        const now = Date.now();
-        const COOLDOWN_MS = 24 * 60 * 60 * 1000; // 24 Horas
-        
-        const isNewAnnouncement = topAnnouncement.id !== lastSeenId;
-        const cooldownPassed = (now - lastSeenTimestamp) > COOLDOWN_MS;
-
-        if (isNewAnnouncement || cooldownPassed) {
-          openAnnouncementModal(topAnnouncement);
-          localStorage.setItem(STORAGE_KEYS.POPUP_LAST_SEEN, now.toString());
-          localStorage.setItem(STORAGE_KEYS.POPUP_LAST_ANNOUNCEMENT_ID, topAnnouncement.id);
-        }
-      }
+    // 3. Cooldown regular de 24 horas para recordar la novedad destacada
+    const lastSeenTimestamp = parseInt(localStorage.getItem(STORAGE_KEYS.POPUP_LAST_SEEN) || '0', 10);
+    const COOLDOWN_MS = 24 * 60 * 60 * 1000;
+    if (Date.now() - lastSeenTimestamp > COOLDOWN_MS) {
+      state.hasAutoShownModal = true;
+      setTimeout(() => {
+        openAnnouncementModal(topAnnouncement);
+        localStorage.setItem(STORAGE_KEYS.POPUP_LAST_SEEN, Date.now().toString());
+      }, 450);
     }
   }
 
@@ -1318,13 +1181,19 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
+      // Cerrar la ventana de perfil de inmediato para mostrar en primer plano la confirmación
+      closeUserProfileModal();
+
       promptNicknameConfirmation(newName, () => {
         localStorage.setItem(STORAGE_KEYS.USER_NICKNAME, newName);
         localStorage.setItem(STORAGE_KEYS.USER_NICKNAME_DATE, Date.now().toString());
-        showToast(`¡Nombre actualizado a "${newName}"!`, 'check');
+        showToast(`¡Nombre fijado a "${newName}" por 15 días!`, 'check');
         renderUserProfileModal();
         renderClientView();
         if (state.activeModalAnnouncement) renderModalComments();
+      }, () => {
+        // Si decide corregir o cerrar, reabrir el perfil
+        openUserProfileModal();
       });
     },
     // Requisito 4: Fijar/Desfijar anuncio de primera en la fila
@@ -1561,6 +1430,8 @@ document.addEventListener('DOMContentLoaded', () => {
       await OneSignal.init({
         appId: ONESIGNAL_APP_ID,
         allowLocalhostAsSecureOrigin: true,
+        serviceWorkerParam: { scope: './' },
+        serviceWorkerPath: 'sw.js',
         notifyButton: {
           enable: false // Usamos nuestros propios botones elegantes y minimalistas
         }
@@ -1721,35 +1592,41 @@ document.addEventListener('DOMContentLoaded', () => {
   const nicknameConfirmSaveBtn = document.getElementById('nickname-confirm-save-btn');
   const nicknameConfirmCancelBtn = document.getElementById('nickname-confirm-cancel-btn');
   let pendingCommentCallback = null;
+  let pendingCancelCallback = null;
 
-  function promptNicknameConfirmation(authorName, onConfirm) {
+  function promptNicknameConfirmation(authorName, onConfirm, onCancel = null) {
     if (!nicknameConfirmModal || !nicknameConfirmPreview) return;
     nicknameConfirmPreview.textContent = authorName;
     pendingCommentCallback = onConfirm;
+    pendingCancelCallback = onCancel;
     nicknameConfirmModal.classList.remove('view-hidden');
     lockBodyScroll();
   }
 
-  function closeNicknameConfirmModal() {
+  function closeNicknameConfirmModal(didConfirm = false) {
     if (nicknameConfirmModal) nicknameConfirmModal.classList.add('view-hidden');
+    const cancelCb = pendingCancelCallback;
     pendingCommentCallback = null;
+    pendingCancelCallback = null;
     unlockBodyScroll();
+    if (!didConfirm && cancelCb) {
+      cancelCb();
+    }
   }
 
   if (nicknameConfirmCancelBtn) {
-    nicknameConfirmCancelBtn.addEventListener('click', closeNicknameConfirmModal);
+    nicknameConfirmCancelBtn.addEventListener('click', () => closeNicknameConfirmModal(false));
   }
   if (nicknameConfirmModal) {
     nicknameConfirmModal.addEventListener('click', (e) => {
-      if (e.target === nicknameConfirmModal) closeNicknameConfirmModal();
+      if (e.target === nicknameConfirmModal) closeNicknameConfirmModal(false);
     });
   }
   if (nicknameConfirmSaveBtn) {
     nicknameConfirmSaveBtn.addEventListener('click', () => {
-      if (pendingCommentCallback) {
-        pendingCommentCallback();
-      }
-      closeNicknameConfirmModal();
+      const cb = pendingCommentCallback;
+      closeNicknameConfirmModal(true);
+      if (cb) cb();
     });
   }
 
@@ -1867,35 +1744,46 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 2. Notificación local si tiene permiso en esta pestaña
     if ('Notification' in window && Notification.permission === 'granted') {
-      if (navigator.serviceWorker && navigator.serviceWorker.ready) {
-        navigator.serviceWorker.ready.then((reg) => {
-          reg.showNotification('HEDAMPRO | ' + title, {
-            body: content || 'Se acaba de publicar un nuevo anuncio oficial en el tablón de novedades.',
-            icon: 'assets/icon-192.png',
-            badge: 'assets/badge-96.png',
-            vibrate: [200, 100, 200]
+      try {
+        if (navigator.serviceWorker && navigator.serviceWorker.ready) {
+          navigator.serviceWorker.ready.then((reg) => {
+            reg.showNotification('HEDAMPRO | ' + title, {
+              body: content ? content.substring(0, 140) : 'Se acaba de publicar un nuevo anuncio oficial en el tablón de novedades.',
+              icon: 'assets/icon-192.png',
+              badge: 'assets/badge-96.png',
+              vibrate: [200, 100, 200],
+              data: { url: './index.html' }
+            });
           });
-        });
+        } else {
+          new Notification('HEDAMPRO | ' + title, {
+            body: content ? content.substring(0, 140) : 'Se acaba de publicar un nuevo anuncio oficial en el tablón de novedades.',
+            icon: 'assets/icon-192.png'
+          });
+        }
+      } catch (e) {
+        console.warn('[Notificación Local]', e);
       }
     }
 
-    // 3. Envío masivo vía OneSignal REST API (Despierta teléfonos y PCs suscritos)
+    // 3. Envío masivo vía OneSignal REST API (Despierta teléfonos y PCs suscritos con la app abierta o cerrada)
     try {
       const response = await fetch("https://onesignal.com/api/v1/notifications", {
         method: "POST",
         headers: {
           "Content-Type": "application/json; charset=utf-8",
-          "Authorization": `Basic ${ONESIGNAL_REST_API_KEY}`
+          "Authorization": `Key ${ONESIGNAL_REST_API_KEY}`
         },
         body: JSON.stringify({
           app_id: ONESIGNAL_APP_ID,
-          included_segments: ["All", "Subscribed Users"],
+          included_segments: ["Total Subscriptions", "Subscribed Users"],
           headings: { "es": "HEDAMPRO | " + title, "en": "HEDAMPRO | " + title },
           contents: {
-            "es": content ? content.substring(0, 120) + '...' : "Se acaba de publicar una nueva novedad oficial en la plataforma.",
-            "en": content ? content.substring(0, 120) + '...' : "New official announcement published on HEDAMPRO."
+            "es": content ? content.substring(0, 140) : "Se acaba de publicar una nueva novedad oficial en la plataforma.",
+            "en": content ? content.substring(0, 140) : "New official announcement published on HEDAMPRO."
           },
           url: "https://nouveltyhedam.com",
+          web_url: "https://nouveltyhedam.com",
           chrome_web_icon: "https://nouveltyhedam.com/assets/icon-192.png",
           chrome_web_badge: "https://nouveltyhedam.com/assets/badge-96.png",
           firefox_icon: "https://nouveltyhedam.com/assets/icon-192.png"
@@ -1905,41 +1793,99 @@ document.addEventListener('DOMContentLoaded', () => {
       const data = await response.json();
       console.log('[OneSignal Push API] Respuesta:', data);
       if (data.id) {
-        showToast('¡Notificación enviada con éxito a todos los usuarios!', 'check');
+        showToast('¡Notificación enviada con éxito a los usuarios!', 'check');
       }
     } catch (err) {
       console.warn('[OneSignal Push API] Error al enviar masivo:', err);
     }
   }
 
-  // Sincronización en tiempo real entre pestañas
-  window.addEventListener('storage', (e) => {
-    if (e.key === STORAGE_KEYS.ANNOUNCEMENTS) {
-      state.announcements = loadJSON(STORAGE_KEYS.ANNOUNCEMENTS, []).filter(a => a.id !== 'ann_oficial_bienvenida');
-      renderClientView();
-      if (state.isAuthenticated) renderAdminDashboard();
+  // Sincronización en la nube directa vía REST API (Garantiza carga instantánea en cualquier navegador)
+  async function fetchCloudDataREST() {
+    try {
+      const res = await fetch('https://firestore.googleapis.com/v1/projects/nouveltyhedam/databases/(default)/documents/announcements');
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.documents && Array.isArray(data.documents)) {
+          const cloudList = [];
+          data.documents.forEach(doc => {
+            const docId = doc.name.split('/').pop();
+            if (docId === 'ann_oficial_bienvenida') return;
+            const fields = doc.fields || {};
+            cloudList.push({
+              id: fields.id?.stringValue || docId,
+              title: fields.title?.stringValue || '',
+              content: fields.content?.stringValue || '',
+              imageUrl: fields.imageUrl?.stringValue || '',
+              ctaText: fields.ctaText?.stringValue || 'VER AHORA',
+              ctaUrl: fields.ctaUrl?.stringValue || '',
+              publishedAt: fields.publishedAt?.stringValue || '',
+              expiresAt: fields.expiresAt?.stringValue || '',
+              isPinned: fields.isPinned?.booleanValue === true,
+              views: parseInt(fields.views?.integerValue || '0', 10),
+              clicks: parseInt(fields.clicks?.integerValue || '0', 10),
+              status: fields.status?.stringValue || 'published'
+            });
+          });
+
+          if (cloudList.length > 0) {
+            cloudList.sort((a, b) => {
+              const aPinned = a.isPinned === true ? 1 : 0;
+              const bPinned = b.isPinned === true ? 1 : 0;
+              if (aPinned !== bPinned) return bPinned - aPinned;
+              return new Date(b.publishedAt || 0) - new Date(a.publishedAt || 0);
+            });
+            state.announcements = cloudList;
+            saveAnnouncements();
+            renderClientView();
+            checkAndTriggerAutoPopup();
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('[Cloud REST API] Novedades:', e);
     }
-    if (e.key === STORAGE_KEYS.COMMENTS) {
-      state.comments = loadJSON(STORAGE_KEYS.COMMENTS, []);
-      renderClientView();
-      if (state.activeModalAnnouncement) renderModalComments();
-      if (state.selectedModerationId) renderModerationDrawer();
+
+    try {
+      const commRes = await fetch('https://firestore.googleapis.com/v1/projects/nouveltyhedam/databases/(default)/documents/comments');
+      if (commRes.ok) {
+        const commData = await commRes.json();
+        if (commData && commData.documents && Array.isArray(commData.documents)) {
+          const cloudComments = [];
+          commData.documents.forEach(doc => {
+            const fields = doc.fields || {};
+            cloudComments.push({
+              id: fields.id?.stringValue || doc.name.split('/').pop(),
+              announcementId: fields.announcementId?.stringValue || '',
+              userId: fields.userId?.stringValue || '',
+              userName: fields.userName?.stringValue || '',
+              content: fields.content?.stringValue || '',
+              createdAt: fields.createdAt?.stringValue || new Date().toISOString()
+            });
+          });
+          cloudComments.sort((a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0));
+          state.comments = cloudComments;
+          saveComments();
+          renderClientView();
+          if (state.activeModalAnnouncement) renderModalComments();
+        }
+      }
+    } catch (e) {
+      console.warn('[Cloud REST API] Comentarios:', e);
     }
-    if (e.key === STORAGE_KEYS.USER_NICKNAME || e.key === STORAGE_KEYS.USER_NICKNAME_DATE) {
-      renderClientView();
-      if (state.activeModalAnnouncement) updateModalCommentFormInputs();
-      renderUserProfileModal();
-    }
-  });
+  }
 
   // ================= INICIALIZACIÓN DE ESCUCHA EN TIEMPO REAL FIRESTORE =================
   function initFirestoreListeners() {
+    // 1. Carga inmediata de respaldo por REST para todos los navegadores
+    fetchCloudDataREST();
+
     if (!firestoreDb) return;
 
     // Eliminar definitivamente la novedad de bienvenida en Firestore si existiera
     deleteAnnouncementFromFirestore('ann_oficial_bienvenida');
 
-    // 1. Escuchar novedades en la nube en tiempo real
+    // 2. Escuchar novedades en la nube en tiempo real
     try {
       firestoreDb.collection('announcements').onSnapshot((snapshot) => {
         if (!snapshot.empty) {
@@ -1963,18 +1909,19 @@ document.addEventListener('DOMContentLoaded', () => {
           }
           renderClientView();
           if (state.isAuthenticated) renderAdminDashboard();
+          checkAndTriggerAutoPopup();
         } else if (state.isAuthenticated && state.announcements.length > 0) {
           // Primera sincronización hacia Firestore si la colección está vacía
           state.announcements.forEach(a => syncAnnouncementToFirestore(a));
         }
       }, (err) => {
-        console.warn('[Firestore] Escucha de anuncios en espera (requiere base de datos creada en Firebase):', err.message);
+        console.warn('[Firestore] Escucha de anuncios en espera:', err.message);
       });
     } catch (e) {
       console.warn('[Firestore] Error al inicializar listener de anuncios:', e);
     }
 
-    // 2. Escuchar comentarios de la comunidad en tiempo real
+    // 3. Escuchar comentarios de la comunidad en tiempo real
     try {
       firestoreDb.collection('comments').onSnapshot((snapshot) => {
         if (!snapshot.empty) {
@@ -1991,7 +1938,7 @@ document.addEventListener('DOMContentLoaded', () => {
           if (state.isAuthenticated) renderAdminDashboard();
         }
       }, (err) => {
-        console.warn('[Firestore] Escucha de comentarios en espera (requiere base de datos creada en Firebase):', err.message);
+        console.warn('[Firestore] Escucha de comentarios en espera:', err.message);
       });
     } catch (e) {
       console.warn('[Firestore] Error al inicializar listener de comentarios:', e);

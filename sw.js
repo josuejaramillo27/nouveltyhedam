@@ -1,5 +1,8 @@
+// Integración oficial OneSignal Web Push SDK
+importScripts("https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.sw.js");
+
 // Service Worker para HEDAM Novedades PWA
-const CACHE_NAME = 'hedam-cache-v6';
+const CACHE_NAME = 'hedam-cache-v7';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -8,6 +11,9 @@ const ASSETS_TO_CACHE = [
   './manifest.json',
   './assets/icon-192.png',
   './assets/icon-512.png',
+  './assets/icon-maskable-192.png',
+  './assets/icon-maskable-512.png',
+  './assets/logohedam-app.png',
   './assets/logohedam.png',
   './assets/mascot-pink.png',
   './assets/badge-96.png'
