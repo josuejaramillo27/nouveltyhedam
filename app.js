@@ -480,50 +480,35 @@ document.addEventListener('DOMContentLoaded', () => {
     checkAndTriggerAutoPopup();
   }
 
-  // Comprobar y disparar la ventana emergente de la novedad automáticamente al entrar a la web
+  // Comprobar y disparar la ventana emergente respetando el orden estricto de entrada
   function checkAndTriggerAutoPopup() {
     if (state.hasAutoShownModal || state.isAuthenticated) return;
     const activeList = getActiveAnnouncements();
     if (activeList.length === 0) return;
 
-    const lastSeenId = localStorage.getItem(STORAGE_KEYS.POPUP_LAST_ANNOUNCEMENT_ID);
     const topAnnouncement = activeList[0];
-    const isNewAnnouncement = (topAnnouncement && topAnnouncement.id !== lastSeenId);
-
-    // 1. Si hay una nueva novedad no vista por el usuario, ¡mostrar pop-up de inmediato!
-    if (isNewAnnouncement) {
-      state.hasAutoShownModal = true;
-      setTimeout(() => {
-        openAnnouncementModal(topAnnouncement);
-        localStorage.setItem(STORAGE_KEYS.POPUP_LAST_SEEN, Date.now().toString());
-        localStorage.setItem(STORAGE_KEYS.POPUP_LAST_ANNOUNCEMENT_ID, topAnnouncement.id);
-      }, 450);
-      return;
-    }
-
-    // 2. Si ya vio la última novedad pero no tiene notificaciones activadas, invitar a activarlas
     const notifAlreadyGranted = ('Notification' in window && Notification.permission === 'granted');
-    const notifModalSeen = parseInt(localStorage.getItem(STORAGE_KEYS.NOTIF_MODAL_SEEN) || '0', 10);
-    const NOTIF_COOLDOWN = 12 * 60 * 60 * 1000;
 
-    if (!notifAlreadyGranted && (Date.now() - notifModalSeen > NOTIF_COOLDOWN)) {
-      state.hasAutoShownModal = true;
+    state.hasAutoShownModal = true;
+
+    // ORDEN DE ENTRADA:
+    // 1. Si el usuario aún no tiene notificaciones activadas, lo PRIMERO que debe salir
+    //    es el pop-up de notificaciones (la muñeca rosada).
+    //    Guardamos la última novedad como pendiente para mostrarla en cuanto interactúe con dicho pop-up.
+    if (!notifAlreadyGranted) {
+      state.pendingAnnouncementToShow = topAnnouncement;
       setTimeout(() => {
         openNotifTutorialModal();
       }, 450);
       return;
     }
 
-    // 3. Cooldown regular de 24 horas para recordar la novedad destacada
-    const lastSeenTimestamp = parseInt(localStorage.getItem(STORAGE_KEYS.POPUP_LAST_SEEN) || '0', 10);
-    const COOLDOWN_MS = 24 * 60 * 60 * 1000;
-    if (Date.now() - lastSeenTimestamp > COOLDOWN_MS) {
-      state.hasAutoShownModal = true;
-      setTimeout(() => {
-        openAnnouncementModal(topAnnouncement);
-        localStorage.setItem(STORAGE_KEYS.POPUP_LAST_SEEN, Date.now().toString());
-      }, 450);
-    }
+    // 2. Si el usuario ya tiene las notificaciones activadas, mostrar directamente la última novedad
+    setTimeout(() => {
+      openAnnouncementModal(topAnnouncement);
+      localStorage.setItem(STORAGE_KEYS.POPUP_LAST_SEEN, Date.now().toString());
+      localStorage.setItem(STORAGE_KEYS.POPUP_LAST_ANNOUNCEMENT_ID, topAnnouncement.id);
+    }, 450);
   }
 
   // ================= MODAL DEL ANUNCIO =================
@@ -541,18 +526,38 @@ document.addEventListener('DOMContentLoaded', () => {
   const modalCommentsList = document.getElementById('modal-comments-list');
   const modalCommentForm = document.getElementById('modal-comment-form');
 
-  // ================= CONTROL DE BLOQUEO DE SCROLL DE FONDO PARA MODALES =================
+  // ================= CONTROL DE BLOQUEO DE SCROLL DE FONDO PARA MODALES (ESPECIALMENTE MÓVIL) =================
   let activeOpenModalsCount = 0;
+  let savedScrollY = 0;
 
   function lockBodyScroll() {
     activeOpenModalsCount++;
-    document.body.classList.add('modal-open');
+    if (activeOpenModalsCount === 1) {
+      savedScrollY = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
+      document.documentElement.classList.add('modal-open');
+      document.body.classList.add('modal-open');
+
+      // En dispositivos móviles (pantallas <= 768px), congelar la posición del body para bloquear 100% el scroll trasero
+      if (window.innerWidth <= 768) {
+        document.body.style.top = `-${savedScrollY}px`;
+      }
+    }
   }
 
   function unlockBodyScroll() {
     activeOpenModalsCount = Math.max(0, activeOpenModalsCount - 1);
     if (activeOpenModalsCount === 0) {
+      document.documentElement.classList.remove('modal-open');
       document.body.classList.remove('modal-open');
+
+      if (window.innerWidth <= 768) {
+        const top = document.body.style.top;
+        document.body.style.top = '';
+        if (top) {
+          const scrollPos = parseInt(top || '0', 10) * -1;
+          window.scrollTo(0, scrollPos || savedScrollY);
+        }
+      }
     }
   }
 
@@ -1502,7 +1507,29 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     unlockBodyScroll();
     localStorage.setItem(STORAGE_KEYS.NOTIF_MODAL_SEEN, Date.now().toString());
+
+    // ORDEN SECUENCIAL ESTRICTO:
+    // Al cerrar, activar o saltar el pop-up de notificaciones, se abre de inmediato la última novedad
+    if (state.pendingAnnouncementToShow) {
+      const pendingItem = state.pendingAnnouncementToShow;
+      state.pendingAnnouncementToShow = null;
+      setTimeout(() => {
+        openAnnouncementModal(pendingItem);
+        localStorage.setItem(STORAGE_KEYS.POPUP_LAST_SEEN, Date.now().toString());
+        localStorage.setItem(STORAGE_KEYS.POPUP_LAST_ANNOUNCEMENT_ID, pendingItem.id);
+      }, 350);
+    }
   }
+
+  // Prevenir que en celular se arrastre o scrollee el fondo al tocar fuera del contenido deslizable
+  [modalOverlay, notifTutorialModal].forEach((overlay) => {
+    if (!overlay) return;
+    overlay.addEventListener('touchmove', (e) => {
+      if (!e.target.closest('.modal-body-scrollable, #modal-comments-list, .notif-steps-box')) {
+        if (e.cancelable) e.preventDefault();
+      }
+    }, { passive: false });
+  });
 
   // Gestión de Permisos de Notificaciones Push con OneSignal
   async function requestNotificationPermission() {

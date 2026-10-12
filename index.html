@@ -154,9 +154,8 @@
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
           </button>
 
-          <!-- Contenido Interior con Scroll Limpio -->
-          <div class="modal-inner-scroll">
-            
+          <!-- CABECERA FIJA DEL MODAL -->
+          <div class="modal-header-fixed">
             <!-- Badge: NUEVA NOVEDAD Vectorial Animado -->
             <div style="display: flex; align-items: center;">
               <span style="background: var(--accent-red); color: white; padding: 6px 14px; border-radius: 9999px; font-size: 0.78rem; font-weight: 900; display: inline-flex; align-items: center; gap: 7px; box-shadow: 0 3px 12px var(--accent-red-glow); letter-spacing: 0.5px;">
@@ -168,9 +167,9 @@
             </div>
 
             <!-- Título + Ilustración Vectorial -->
-            <div style="margin-top: 16px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: flex-start; gap: 16px;">
+            <div class="modal-title-row">
               <div style="flex: 1;">
-                <h2 id="modal-title" style="font-size: 1.9rem; font-weight: 900; line-height: 1.15; color: #0e1118; text-transform: uppercase;">
+                <h2 id="modal-title" style="font-size: 1.85rem; font-weight: 900; line-height: 1.15; color: #0e1118; text-transform: uppercase;">
                   <!-- Título inyectado por JS -->
                 </h2>
               </div>
@@ -194,39 +193,22 @@
                 </div>
               </div>
             </div>
+          </div>
 
+          <!-- CUERPO CON SCROLL INDEPENDIENTE (IMAGEN, TEXTO, COMENTARIOS) -->
+          <div class="modal-body-scrollable">
             <!-- Imagen opcional de la novedad -->
-            <div id="modal-image-container" class="view-hidden" style="margin-bottom: 20px;">
-              <img id="modal-image" src="" alt="Banner novedad" style="width: 100%; max-height: 250px; object-fit: cover; border-radius: 12px; border: 1px solid #eee;" />
+            <div id="modal-image-container" class="view-hidden" style="margin-bottom: 18px;">
+              <img id="modal-image" src="" alt="Banner novedad" style="width: 100%; max-height: 240px; object-fit: cover; border-radius: 12px; border: 1px solid #eee;" />
             </div>
 
             <!-- Cuerpo formateado del anuncio -->
-            <div id="modal-body-content" style="margin-bottom: 26px;">
+            <div id="modal-body-content" style="margin-bottom: 16px;">
               <!-- Párrafos y viñetas inyectados por JS -->
             </div>
 
-            <!-- Botones CTA de Acción -->
-            <div style="display: flex; gap: 14px; align-items: center; flex-wrap: wrap; margin-top: 16px;">
-              <a id="modal-cta-link" href="#" target="_blank" class="btn-primary" style="flex: 1; min-width: 220px; padding: 14px 24px; font-size: 0.92rem; display: inline-flex; align-items: center; justify-content: center; gap: 9px;">
-                <span class="vector-icon-wrap vector-hover-bounce">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>
-                </span>
-                <span id="modal-cta-text">VER AHORA</span>
-                <span class="vector-icon-wrap vector-hover-slide">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-                </span>
-              </a>
-
-              <button id="modal-comments-toggle-btn" class="btn-secondary" style="flex: 1; min-width: 200px; padding: 14px 22px; font-size: 0.92rem; display: inline-flex; align-items: center; justify-content: center; gap: 9px;">
-                <span class="vector-icon-wrap vector-hover-bounce">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                </span>
-                <span id="modal-comments-toggle-text">COMENTAR NOVEDAD</span>
-              </button>
-            </div>
-
             <!-- Drawer de Comentarios -->
-            <div id="modal-comments-drawer" class="view-hidden" style="margin-top: 25px; border-top: 2px solid #eef1f6; padding-top: 20px;">
+            <div id="modal-comments-drawer" class="view-hidden" style="margin-top: 20px; border-top: 2px solid #eef1f6; padding-top: 18px;">
               <h4 style="font-size: 1.05rem; font-weight: 800; color: #0e1118; margin-bottom: 12px; display: flex; justify-content: space-between;">
                 <span>Hilo de Comentarios</span>
                 <span id="modal-comments-count" style="font-size: 0.82rem; color: #687285; font-weight: 600;">0 mensajes</span>
@@ -239,8 +221,8 @@
               <!-- Formulario para dejar comentario -->
               <form id="modal-comment-form" style="display: flex; flex-direction: column; gap: 8px;">
                 <div id="modal-comment-fields-container" style="display: flex; gap: 8px; flex-wrap: wrap;">
-                  <input id="comment-author-input" type="text" placeholder="Tu alias o nombre" style="flex: 0 0 150px; padding: 10px 12px; border-radius: 10px; border: 1.5px solid #dce2ee; font-size: 0.85rem; outline: none; color: #0e1118; background: #ffffff;" />
-                  <input id="comment-text-input" type="text" required placeholder="Escribe una opinión o consulta..." style="flex: 1; min-width: 180px; padding: 10px 14px; border-radius: 10px; border: 1.5px solid #dce2ee; font-size: 0.85rem; outline: none; color: #0e1118; background: #ffffff;" />
+                  <input id="comment-author-input" type="text" placeholder="Tu alias o nombre" style="flex: 0 0 140px; padding: 10px 12px; border-radius: 10px; border: 1.5px solid #dce2ee; font-size: 0.85rem; outline: none; color: #0e1118; background: #ffffff;" />
+                  <input id="comment-text-input" type="text" required placeholder="Escribe una opinión o consulta..." style="flex: 1; min-width: 170px; padding: 10px 14px; border-radius: 10px; border: 1.5px solid #dce2ee; font-size: 0.85rem; outline: none; color: #0e1118; background: #ffffff;" />
                   <button type="submit" class="btn-primary" style="padding: 0 20px; border-radius: 10px; box-shadow: none; display: flex; align-items: center; justify-content: center;" title="Enviar">
                     <span class="vector-icon-wrap vector-hover-slide">
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
@@ -249,7 +231,26 @@
                 </div>
               </form>
             </div>
+          </div>
 
+          <!-- FOOTER FIJO CON BOTONES DE ACCIÓN SIEMPRE VISIBLES A PRIMERA VISTA -->
+          <div class="modal-actions-footer">
+            <a id="modal-cta-link" href="#" target="_blank" class="btn-primary modal-action-btn">
+              <span class="vector-icon-wrap vector-hover-bounce">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>
+              </span>
+              <span id="modal-cta-text">VER AHORA</span>
+              <span class="vector-icon-wrap vector-hover-slide">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+              </span>
+            </a>
+
+            <button id="modal-comments-toggle-btn" class="btn-secondary modal-action-btn">
+              <span class="vector-icon-wrap vector-hover-bounce">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+              </span>
+              <span id="modal-comments-toggle-text">COMENTAR NOVEDAD</span>
+            </button>
           </div>
         </div>
       </div>
