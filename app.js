@@ -664,7 +664,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       // Párrafos comunes
-      output += `<p style="font-size: 0.98rem; color: #2d3342; line-height: 1.5; margin-bottom: 8px; font-weight: 500;">${escapeHTML(trimmed)}</p>`;
+      output += `<p class="modal-paragraph">${escapeHTML(trimmed)}</p>`;
     });
 
     return output;

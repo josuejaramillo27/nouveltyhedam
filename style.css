@@ -247,6 +247,11 @@ body.modal-open {
   color: #f1f5f9;
 }
 
+[data-theme="light"] .modal-content {
+  background: #ffffff;
+  color: #0e1118;
+}
+
 /* Cabecera Fija del Modal */
 .modal-header-fixed {
   padding: 26px 30px 10px;
@@ -254,10 +259,15 @@ body.modal-open {
   background: #ffffff;
   border-top-left-radius: 22px;
   border-top-right-radius: 22px;
+  transition: background var(--transition);
 }
 
 [data-theme="dark"] .modal-header-fixed {
   background: #11131a;
+}
+
+[data-theme="light"] .modal-header-fixed {
+  background: #ffffff;
 }
 
 .modal-title-row {
@@ -269,8 +279,17 @@ body.modal-open {
   gap: 16px;
 }
 
+#modal-title {
+  color: #0e1118;
+  transition: color var(--transition);
+}
+
 [data-theme="dark"] #modal-title {
   color: #ffffff !important;
+}
+
+[data-theme="light"] #modal-title {
+  color: #0e1118 !important;
 }
 
 /* Cuerpo con Scroll Independiente */
@@ -280,6 +299,56 @@ body.modal-open {
   min-height: 0;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
+}
+
+/* Texto de la Novedad Dinámico para Modo Oscuro y Modo Claro */
+#modal-body-content {
+  color: #2d3342;
+  transition: color var(--transition);
+}
+
+#modal-body-content p,
+.modal-paragraph {
+  font-size: 0.98rem;
+  color: #2d3342;
+  line-height: 1.55;
+  margin-bottom: 8px;
+  font-weight: 500;
+  transition: color var(--transition);
+}
+
+[data-theme="dark"] #modal-body-content,
+[data-theme="dark"] #modal-body-content p,
+[data-theme="dark"] .modal-paragraph {
+  color: #f1f5f9 !important;
+}
+
+[data-theme="light"] #modal-body-content,
+[data-theme="light"] #modal-body-content p,
+[data-theme="light"] .modal-paragraph {
+  color: #2d3342 !important;
+}
+
+[data-theme="dark"] .checklist-text {
+  color: #f1f5f9 !important;
+}
+
+[data-theme="light"] .checklist-text {
+  color: #1c2230 !important;
+}
+
+[data-theme="dark"] .alert-warning {
+  background: rgba(245, 158, 11, 0.15) !important;
+  color: #fef3c7 !important;
+  border-left-color: #f59e0b !important;
+}
+
+[data-theme="dark"] #modal-comments-drawer h4 {
+  color: #ffffff !important;
+}
+
+[data-theme="light"] #modal-comments-drawer h4 {
+  color: #0e1118 !important;
 }
 
 .modal-body-scrollable::-webkit-scrollbar {
@@ -304,11 +373,17 @@ body.modal-open {
   display: flex;
   gap: 12px;
   align-items: center;
+  transition: background var(--transition), border-color var(--transition);
 }
 
 [data-theme="dark"] .modal-actions-footer {
   background: #11131a;
   border-top-color: #232738;
+}
+
+[data-theme="light"] .modal-actions-footer {
+  background: #ffffff;
+  border-top-color: #edf2f7;
 }
 
 .modal-action-btn {
@@ -1431,21 +1506,43 @@ body.modal-open {
     padding: 2px 18px 12px;
   }
   .modal-actions-footer {
-    padding: 10px 14px 12px;
+    padding: 8px 10px 12px;
     border-bottom-left-radius: 18px;
     border-bottom-right-radius: 18px;
-    gap: 8px;
+    gap: 6px;
   }
   .modal-action-btn {
-    min-height: 42px;
-    padding: 10px 8px;
-    font-size: 0.8rem;
-    gap: 6px;
+    flex: 1 1 0;
+    min-width: 0;
+    min-height: 38px;
+    padding: 7px 4px;
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: -0.2px;
+    gap: 5px;
     border-radius: 10px;
+    white-space: nowrap;
+    overflow: hidden;
+  }
+  .modal-action-btn span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
   .modal-action-btn svg {
-    width: 14px;
-    height: 14px;
+    width: 13px;
+    height: 13px;
+    flex-shrink: 0;
+  }
+  .modal-action-btn .vector-hover-slide {
+    display: none !important; /* Ocultar flecha decorativa derecha en móvil para que el texto nunca se corte */
+  }
+  @media (max-width: 360px) {
+    .modal-action-btn {
+      font-size: 0.67rem !important;
+      padding: 6px 3px !important;
+      gap: 3px !important;
+    }
   }
   .mascot-container {
     width: 110px;
