@@ -413,63 +413,93 @@ document.addEventListener('DOMContentLoaded', () => {
       const itemPinned = item.isPinned === true;
       const rawText = item.content ? item.content.replace(/[\n\r]+/g, ' ') : '';
       const cleanExcerpt = escapeHTML(rawText.substring(0, 150)) + (rawText.length > 150 ? '...' : '');
-
+      const now = new Date();
+      const pubDate = new Date(item.publishedAt);
+      const diffHours = (now - pubDate) / (1000 * 60 * 60);
+      const isNew = diffHours <= 48;
+      
       cardsHtml += `
-        <article class="novedad-card ${itemPinned ? 'pinned-card' : ''}" onclick="window.hedamApp.openModal('${item.id}')" title="Clic para ver novedad completa en pop-up">
-          ${item.imageUrl ? `
-            <div class="novedad-card-image-wrap">
-              <img src="${escapeHTML(item.imageUrl)}" alt="${escapeHTML(item.title)}" class="novedad-card-img" loading="lazy" />
-            </div>
-          ` : ''}
-
-          <div class="novedad-card-body">
-            <div class="novedad-card-top">
-              <span style="font-size: 0.76rem; color: var(--text-muted); font-weight: 700; display: inline-flex; align-items: center; gap: 5px;">
-                ${renderIcon('calendar', { size: 13, color: 'var(--text-muted)' })}
-                <span>${itemDate}</span>
-              </span>
-
-              <div style="display: flex; align-items: center; gap: 6px;">
-                ${itemPinned ? `
-                  <span class="badge-pinned">
-                    📌 Fijado
-                  </span>
-                ` : `
-                  <span style="background: rgba(255, 30, 39, 0.08); color: var(--accent-red); font-size: 0.68rem; font-weight: 800; padding: 3px 8px; border-radius: 9999px; text-transform: uppercase;">
-                    Oficial
-                  </span>
-                `}
+        <article class="novedad-card ${itemPinned ? 'pinned-card' : ''}" onclick="window.hedamApp.openModal('${item.id}')" title="Clic para ver novedad completa">
+          
+          <!-- ================= VISTA ESCRITORIO (PC) ================= -->
+          <div class="desktop-card-content">
+            ${item.imageUrl ? `
+              <div class="novedad-card-image-wrap">
+                <img src="${escapeHTML(item.imageUrl)}" alt="${escapeHTML(item.title)}" class="novedad-card-img" loading="lazy" />
               </div>
-            </div>
+            ` : ''}
 
-            <h3 class="novedad-card-title">
-              ${escapeHTML(item.title)}
-            </h3>
-
-            <p class="novedad-card-excerpt">
-              ${cleanExcerpt}
-            </p>
-
-            <div class="novedad-card-footer">
-              <div class="novedad-card-stats">
-                <span title="Lecturas públicas" style="display: inline-flex; align-items: center; gap: 4px;">
-                  ${renderIcon('eye', { size: 14, color: 'var(--accent-red)' })}
-                  <span>${item.views || 0}</span>
+            <div class="novedad-card-body">
+              <div class="novedad-card-top">
+                <span style="font-size: 0.76rem; color: var(--text-muted); font-weight: 700; display: inline-flex; align-items: center; gap: 5px;">
+                  ${renderIcon('calendar', { size: 13, color: 'var(--text-muted)' })}
+                  <span>${itemDate}</span>
                 </span>
-                <span title="Comentarios" style="display: inline-flex; align-items: center; gap: 4px;">
-                  ${renderIcon('message-square', { size: 14 })}
-                  <span>${commentsCount}</span>
-                </span>
+
+                <div style="display: flex; align-items: center; gap: 6px;">
+                  ${itemPinned ? `
+                    <span class="badge-pinned">📌 Fijado</span>
+                  ` : isNew ? `
+                    <span class="badge-new">Nuevo</span>
+                  ` : ''}
+                </div>
               </div>
 
-              <div class="novedad-card-btn">
-                <span>Ver Novedad</span>
-                <span class="vector-icon-wrap vector-hover-slide">
-                  ${renderIcon('arrow-right', { size: 13 })}
-                </span>
+              <h3 class="novedad-card-title">${escapeHTML(item.title)}</h3>
+              <p class="novedad-card-excerpt">${cleanExcerpt}</p>
+
+              <div class="novedad-card-footer">
+                <div class="novedad-card-stats">
+                  <span title="Lecturas públicas" style="display: inline-flex; align-items: center; gap: 4px;">
+                    ${renderIcon('eye', { size: 14, color: 'var(--accent-red)' })}
+                    <span>${item.views || 0}</span>
+                  </span>
+                  <span title="Comentarios" style="display: inline-flex; align-items: center; gap: 4px;">
+                    ${renderIcon('message-square', { size: 14 })}
+                    <span>${commentsCount}</span>
+                  </span>
+                </div>
+                <div class="novedad-card-btn">
+                  <span>Ver Novedad</span>
+                  <span class="vector-icon-wrap vector-hover-slide">
+                    ${renderIcon('arrow-right', { size: 13 })}
+                  </span>
+                </div>
               </div>
             </div>
           </div>
+
+          <!-- ================= VISTA MÓVIL (HORIZONTAL MINIMALISTA) ================= -->
+          <div class="mobile-card-content">
+            <div class="mobile-card-icon-box">
+              <span class="vector-icon-wrap anim-shake">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="var(--accent-red)" stroke="var(--accent-red)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+              </span>
+            </div>
+            
+            <div class="mobile-card-text">
+              <div class="mobile-card-date">
+                ${renderIcon('calendar', { size: 12, color: 'var(--text-muted)' })}
+                <span>${itemDate}</span>
+              </div>
+              <h3 class="mobile-card-title">${escapeHTML(item.title)}</h3>
+            </div>
+
+            <div class="mobile-card-action">
+               <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 6px;">
+                  ${itemPinned ? `
+                    <span class="mobile-badge-solid pinned"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 3px;"><path d="m16 8-3-3"/><path d="M12 20v-8"/><path d="M5.5 13.5 9 10"/><path d="m14 4.5 3.5 3.5"/><path d="M19 13v5.5l-4-4-4 4V13c0-2-1.5-3.5-3.5-3.5H2l4-4 4 4h5.5c2 0 3.5 1.5 3.5 3.5Z"/></svg> FIJADO</span>
+                  ` : isNew ? `
+                    <span class="mobile-badge-solid new">NUEVO</span>
+                  ` : ''}
+                  
+                  <div class="mobile-action-circle">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                  </div>
+               </div>
+            </div>
+          </div>
+
         </article>
       `;
     });
