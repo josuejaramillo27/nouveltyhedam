@@ -509,15 +509,6 @@ document.addEventListener('DOMContentLoaded', () => {
       localStorage.setItem(STORAGE_KEYS.POPUP_LAST_ANNOUNCEMENT_ID, newestAnnouncement.id);
     }, 450);
   }
-
-    // 2. Si el usuario ya tiene las notificaciones activadas, mostrar directamente la última novedad
-    setTimeout(() => {
-      openAnnouncementModal(topAnnouncement);
-      localStorage.setItem(STORAGE_KEYS.POPUP_LAST_SEEN, Date.now().toString());
-      localStorage.setItem(STORAGE_KEYS.POPUP_LAST_ANNOUNCEMENT_ID, topAnnouncement.id);
-    }, 450);
-  }
-
   // ================= MODAL DEL ANUNCIO =================
   const modalOverlay = document.getElementById('modal-overlay');
   const modalCloseBtn = document.getElementById('modal-close-btn');
