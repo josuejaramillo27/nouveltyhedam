@@ -1438,8 +1438,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // ================= CONFIGURACIÓN OFICIAL ONESIGNAL WEB SDK =================
   const ONESIGNAL_APP_ID = "f5396dcb-514b-4e99-ba7d-002b2e1b109a";
   // Clave de API OneSignal codificada para proteger el repositorio público
-  const _kPart1 = "os_v2_app_6u4w3s2rjnhjtot5aavs4gyqtkkm6rkm";
-  const _kPart2 = "msneakem3timrkh6dvqzzrkvamxowalhr7dxl4bpl7ymtu2224wuoufusbyrlhfpmxgih2i";
+  const ONESIGNAL_REST_API_KEY = "os_v2_app_6u4w3s2rjnhjtot5aavs4gyqtkkm6rkmmsneakem3timrkh6dvqzzrkvamxowalhr7dxl4bpl7ymtu2224wuoufusbyrlhfpmxgih2i";
   const ONESIGNAL_REST_API_KEY = [_kPart1, _kPart2].join('');
 
   window.OneSignalDeferred = window.OneSignalDeferred || [];
@@ -1812,7 +1811,7 @@ document.addEventListener('DOMContentLoaded', () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json; charset=utf-8",
-          "Authorization": `Key ${ONESIGNAL_REST_API_KEY}`
+          "Authorization": `Basic ${ONESIGNAL_REST_API_KEY}`
         },
         body: JSON.stringify({
           app_id: ONESIGNAL_APP_ID,
