@@ -1,8 +1,3 @@
-/**
- * HEDAMPRO - Novedades y Anuncios
- * Archivo de lógica pura estándar JavaScript (Vanilla JS)
- */
-
 document.addEventListener('DOMContentLoaded', () => {
   // ================= SISTEMA DE ICONOS VECTORIALES (LUCIDE MINIMALISTAS) =================
   const ICONS = {
@@ -1806,11 +1801,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 3. Envío masivo vía OneSignal REST API (Despierta teléfonos y PCs suscritos con la app abierta o cerrada)
     try {
-      const response = await fetch("https://onesignal.com/api/v1/notifications", {
+      // Utilizamos un Proxy CORS (corsproxy.io) para eludir el bloqueo de seguridad del navegador
+      const response = await fetch("https://corsproxy.io/?" + encodeURIComponent("https://api.onesignal.com/notifications"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json; charset=utf-8",
-          "Authorization": `Basic ${ONESIGNAL_REST_API_KEY}`
+          // Restauramos la palabra "Key" que exige OneSignal
+          "Authorization": `Key ${ONESIGNAL_REST_API_KEY}` 
         },
         body: JSON.stringify({
           app_id: ONESIGNAL_APP_ID,
@@ -1821,22 +1818,23 @@ document.addEventListener('DOMContentLoaded', () => {
             "en": content ? content.substring(0, 140) : "New official announcement published on HEDAMPRO."
           },
           url: "https://nouveltyhedam.com",
-          web_url: "https://nouveltyhedam.com",
-          chrome_web_icon: "https://nouveltyhedam.com/assets/icon-192.png",
-          chrome_web_badge: "https://nouveltyhedam.com/assets/badge-96.png",
-          firefox_icon: "https://nouveltyhedam.com/assets/icon-192.png"
+          web_url: "https://nouveltyhedam.com"
         })
       });
 
       const data = await response.json();
       console.log('[OneSignal Push API] Respuesta:', data);
+      
+      // Si el id viene en la respuesta, la notificación fue despachada
       if (data.id) {
         showToast('¡Notificación enviada con éxito a los usuarios!', 'check');
+      } else if (data.errors) {
+        console.warn('[OneSignal] Errores al enviar:', data.errors);
+        showToast('Error al notificar: Verifica tu REST API Key', 'alert-triangle');
       }
     } catch (err) {
       console.warn('[OneSignal Push API] Error al enviar masivo:', err);
     }
-  }
 
   // Sincronización en la nube directa vía REST API (Garantiza carga instantánea en cualquier navegador)
   async function fetchCloudDataREST() {
