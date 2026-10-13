@@ -1465,7 +1465,8 @@ document.addEventListener('DOMContentLoaded', () => {
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', async () => {
       try {
-        const swReg = await navigator.serviceWorker.register('/sw.js');
+        // Unificamos el registro para que la PWA use el mismo archivo de OneSignal
+        const swReg = await navigator.serviceWorker.register('/OneSignalSDKWorker.js');
         console.log('[HEDAM PWA] Service Worker registrado:', swReg.scope);
       } catch (err) {
         console.warn('[Service Worker] Registro:', err);
