@@ -957,6 +957,16 @@ document.addEventListener('DOMContentLoaded', () => {
       createFormCard.classList.toggle('view-hidden');
       if (!createFormCard.classList.contains('view-hidden')) {
         document.getElementById('form-published-at').value = getLocalDateTimeString();
+        
+        // --- NUEVO: AUTO-SCROLL Y ENFOQUE AUTOMÁTICO ---
+        setTimeout(() => {
+          // Desliza la pantalla suavemente hasta el formulario
+          createFormCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          
+          // Pone el cursor en el campo de "Título" automáticamente
+          const titleInput = document.getElementById('form-title');
+          if (titleInput) titleInput.focus();
+        }, 150);
       }
     });
   }
