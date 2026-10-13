@@ -1835,7 +1835,7 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (err) {
       console.warn('[OneSignal Push API] Error al enviar masivo:', err);
     }
-
+  }
   // Sincronización en la nube directa vía REST API (Garantiza carga instantánea en cualquier navegador)
   async function fetchCloudDataREST() {
     try {
