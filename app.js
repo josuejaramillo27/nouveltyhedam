@@ -1435,6 +1435,20 @@ document.addEventListener('DOMContentLoaded', () => {
   try {
     if (firebase.messaging.isSupported()) {
       firebaseMessaging = firebase.messaging();
+      
+      // NUEVO: Escuchar notificaciones cuando la APP ESTÁ ABIERTA en la pantalla
+      firebaseMessaging.onMessage((payload) => {
+        console.log('[FCM] Notificación recibida con la app ABIERTA:', payload);
+        navigator.serviceWorker.ready.then((swReg) => {
+          swReg.showNotification(payload.notification.title, {
+            body: payload.notification.body,
+            icon: 'assets/icon-192.png',
+            badge: 'assets/badge-96.png',
+            data: { url: './index.html' }
+          });
+        });
+      });
+      
     }
   } catch (e) {
     console.warn('[Firebase FCM] No soportado en este entorno.');
