@@ -1444,28 +1444,50 @@ document.addEventListener('DOMContentLoaded', () => {
   async function suscribirUsuarioFCM() {
     if (!firebaseMessaging) return false;
     try {
-      const permission = await Notification.requestPermission();
-      if (permission === 'granted') {
+      const currentPermission = Notification.permission;
+      
+      // Si ya hay permiso o si el usuario acaba de darlo
+      if (currentPermission === 'granted' || (await Notification.requestPermission()) === 'granted') {
+        
+        console.log('[Firebase FCM] Solicitando token a Google...');
         const swReg = await navigator.serviceWorker.ready;
-        const token = await firebaseMessaging.getToken({ 
-          vapidKey: FIREBASE_VAPID_KEY, 
-          serviceWorkerRegistration: swReg 
-        });
-        if (token) {
-          await firestoreDb.collection('fcm_tokens').doc(token).set({
-            plataforma: navigator.platform || 'Desconocida',
-            fechaRegistro: new Date().toISOString()
-          });
-          updatePwaButtonVisibility();
-          showToast('¡Notificaciones activadas con éxito!', 'check-circle-2');
-          return true;
+        
+        // Esperamos a que el Service Worker esté activo y libre
+        if (swReg.active) {
+            const token = await firebaseMessaging.getToken({ 
+              vapidKey: FIREBASE_VAPID_KEY, 
+              serviceWorkerRegistration: swReg 
+            });
+            
+            if (token) {
+              console.log('[Firebase FCM] Token obtenido con éxito. Guardando en Firestore...');
+              await firestoreDb.collection('fcm_tokens').doc(token).set({
+                plataforma: navigator.platform || 'Desconocida',
+                fechaRegistro: new Date().toISOString(),
+                ultimoUso: new Date().toISOString()
+              }, { merge: true }); // Usamos merge para no borrar datos si el token ya existe
+              
+              updatePwaButtonVisibility();
+              return true;
+            }
+        } else {
+            console.warn('[Firebase FCM] El Service Worker no está completamente activo aún.');
         }
       }
       return false;
     } catch (err) {
-      console.warn('Error al obtener token FCM:', err);
+      console.warn('[Firebase FCM] Error crítico al obtener token:', err);
       return false;
     }
+  }
+
+  // --- NUEVA FUNCIÓN: Ejecutar en silencio al cargar la web ---
+  // Si el usuario ya había dado permiso antes (como en tu caso), capturamos el token de inmediato
+  if ('Notification' in window && Notification.permission === 'granted') {
+    // Esperamos 2 segundos para no ralentizar la carga inicial de la web
+    setTimeout(() => {
+        suscribirUsuarioFCM();
+    }, 2000);
   }
 
   // ================= MODAL TUTORIAL NOTIFICACIONES (MUÑECA ROSADA) =================
