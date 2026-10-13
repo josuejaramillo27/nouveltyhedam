@@ -1721,9 +1721,37 @@ document.addEventListener('DOMContentLoaded', () => {
     profileContentArea.innerHTML = html;
   }
 
-  // Disparo automático ultra-rápido (Notificación Local Solo para Admin)
+  // Disparo automático (Llama al servidor de Render)
   async function triggerNewAnnouncementNotification(title, content = '') {
-    showToast('¡Novedad publicada! Render notificará a los usuarios...', 'sparkles');
+    showToast('¡Novedad publicada! Despertando al servidor...', 'sparkles');
+    
+    try {
+      // Esta es tu URL exacta de Render
+      const urlRender = "https://hedam-backend.onrender.com/enviar-notificacion";
+      
+      const response = await fetch(urlRender, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          titulo: title,
+          cuerpo: content ? content.substring(0, 140) : 'Revisa la nueva información oficial.'
+        })
+      });
+
+      const data = await response.json();
+      console.log('[Render Backend] Respuesta:', data);
+      
+      if (data.success) {
+         showToast(`¡Notificación enviada a ${data.enviados || 0} dispositivos!`, 'check-circle-2');
+      } else {
+         showToast('Error en el servidor de envíos.', 'alert-triangle');
+      }
+    } catch (err) {
+      console.warn('[Render Backend] Error de conexión:', err);
+      // Si Render estaba dormido profundamente, puede que la primera petición tarde o falle,
+      // pero el servidor ya estará despertando para la siguiente.
+      showToast('El servidor está despertando, puede tardar hasta 1 minuto...', 'alert-triangle');
+    }
   }
 
   // Sincronización en la nube directa vía REST API (Garantiza carga instantánea en cualquier navegador)
