@@ -475,28 +475,40 @@ document.addEventListener('DOMContentLoaded', () => {
     checkAndTriggerAutoPopup();
   }
 
-  // Comprobar y disparar la ventana emergente respetando el orden estricto de entrada
+  // Comprobar y disparar la ventana emergente respetando la fecha (ignorando si está fijado)
   function checkAndTriggerAutoPopup() {
     if (state.hasAutoShownModal || state.isAuthenticated) return;
-    const activeList = getActiveAnnouncements();
-    if (activeList.length === 0) return;
+    
+    // Obtenemos todos los activos pero los ordenamos ESTRICTAMENTE por fecha (del más nuevo al más viejo)
+    const now = new Date();
+    const activeByDate = state.announcements.filter(a => {
+      const isPublished = (a.status === 'published' || !a.status);
+      const notExpired = !a.expiresAt || new Date(a.expiresAt) > now;
+      return isPublished && notExpired;
+    }).sort((a, b) => new Date(b.publishedAt || 0).getTime() - new Date(a.publishedAt || 0).getTime());
 
-    const topAnnouncement = activeList[0];
+    if (activeByDate.length === 0) return;
+
+    // Tomamos SIEMPRE el más reciente (el que se acaba de publicar)
+    const newestAnnouncement = activeByDate[0];
     const notifAlreadyGranted = ('Notification' in window && Notification.permission === 'granted');
 
     state.hasAutoShownModal = true;
 
-    // ORDEN DE ENTRADA:
-    // 1. Si el usuario aún no tiene notificaciones activadas, lo PRIMERO que debe salir
-    //    es el pop-up de notificaciones (la muñeca rosada).
-    //    Guardamos la última novedad como pendiente para mostrarla en cuanto interactúe con dicho pop-up.
     if (!notifAlreadyGranted) {
-      state.pendingAnnouncementToShow = topAnnouncement;
+      state.pendingAnnouncementToShow = newestAnnouncement;
       setTimeout(() => {
         openNotifTutorialModal();
       }, 450);
       return;
     }
+
+    setTimeout(() => {
+      openAnnouncementModal(newestAnnouncement);
+      localStorage.setItem(STORAGE_KEYS.POPUP_LAST_SEEN, Date.now().toString());
+      localStorage.setItem(STORAGE_KEYS.POPUP_LAST_ANNOUNCEMENT_ID, newestAnnouncement.id);
+    }, 450);
+  }
 
     // 2. Si el usuario ya tiene las notificaciones activadas, mostrar directamente la última novedad
     setTimeout(() => {
@@ -749,7 +761,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
             ${isOfficial ? `
               <div style="display: inline-flex; align-items: center; gap: 7px;">
-                <img src="assets/mascot.png" alt="Soporte HEDAM" class="admin-comment-mascot" />
+                <img src="assets/mascot-pink.png" alt="Soporte HEDAM" class="admin-comment-mascot" />
                 <span style="font-weight: 800; font-size: 0.88rem; color: var(--accent-red);">Soporte HEDAM</span>
               </div>
             ` : `
@@ -1074,7 +1086,7 @@ document.addEventListener('DOMContentLoaded', () => {
               ${isOfficial ? `
                 <strong style="font-size: 0.88rem; color: var(--accent-red); display: inline-flex; align-items: center; gap: 6px;">
                   <!-- Requisito 3: mascot.png y Soporte HEDAM sin emojis -->
-                  <img src="assets/mascot.png" alt="Soporte HEDAM" class="admin-comment-mascot" />
+                  <img src="assets/mascot-pink.png" alt="Soporte HEDAM" class="admin-comment-mascot" />
                   <span>Soporte HEDAM</span>
                 </strong>
               ` : `
