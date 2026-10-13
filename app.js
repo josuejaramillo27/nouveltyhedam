@@ -1430,43 +1430,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 4000);
   }
 
-  let firebaseMessaging = null;
-  try {
-    if (firebase.messaging.isSupported()) {
-      firebaseMessaging = firebase.messaging();
-      console.log('[Firebase FCM] Listo para recibir tokens');
-    }
-  } catch (e) {
-    console.warn('[Firebase FCM] No soportado:', e.message);
-  }
-
-  // Helper para suscribir usuarios a la base de datos
-  async function suscribirUsuarioFCM() {
-    if (!firebaseMessaging) return false;
-    try {
-      const permission = await Notification.requestPermission();
-      if (permission === 'granted') {
-        const swReg = await navigator.serviceWorker.ready;
-        // Solicitamos un token único de Google usando la VAPID KEY que ya tenías en tu código
-        const token = await firebaseMessaging.getToken({ vapidKey: FIREBASE_VAPID_KEY, serviceWorkerRegistration: swReg });
-        if (token) {
-          // Guardamos el token en una nueva colección llamada 'fcm_tokens'
-          await firestoreDb.collection('fcm_tokens').doc(token).set({
-            plataforma: navigator.platform || 'Desconocida',
-            fechaRegistro: new Date().toISOString()
-          });
-          updatePwaButtonVisibility();
-          showToast('¡Notificaciones activadas con éxito!', 'check-circle-2');
-          return true;
-        }
-      }
-      return false;
-    } catch (err) {
-      console.warn('Error al obtener token FCM:', err);
-      return false;
-    }
-  }
-
   // ================= MODAL TUTORIAL NOTIFICACIONES (MUÑECA ROSADA) =================
   const notifTutorialModal = document.getElementById('notif-tutorial-modal');
   const notifTutorialCloseBtn = document.getElementById('notif-tutorial-close-btn');
