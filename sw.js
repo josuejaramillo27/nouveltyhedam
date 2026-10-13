@@ -39,7 +39,7 @@ self.addEventListener('notificationclick', (event) => {
 });
 
 // 3. Service Worker para HEDAM Novedades PWA (Caché)
-const CACHE_NAME = 'hedam-cache-v8';
+const CACHE_NAME = 'hedam-cache-v9';
 const ASSETS_TO_CACHE = [
   './', './index.html', './style.css', './app.js', './manifest.json',
   './assets/icon-192.png', './assets/icon-512.png', './assets/logohedam.png', './assets/mascot-pink.png'
@@ -73,6 +73,19 @@ self.addEventListener('fetch', (event) => {
           return caches.match('./index.html');
         }
       });
+    })
+  );
+});
+
+// Listener para cuando el usuario hace clic en la notificación
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
+      for (let client of windowClients) {
+        if (client.url.includes('index.html') && 'focus' in client) return client.focus();
+      }
+      if (clients.openWindow) return clients.openWindow('./index.html');
     })
   );
 });
