@@ -1801,12 +1801,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 3. Envío masivo vía OneSignal REST API (Despierta teléfonos y PCs suscritos con la app abierta o cerrada)
     try {
-      // Utilizamos un Proxy CORS (corsproxy.io) para eludir el bloqueo de seguridad del navegador
-      const response = await fetch("https://corsproxy.io/?" + encodeURIComponent("https://api.onesignal.com/notifications"), {
+      // Utilizamos CORS Anywhere para saltar el bloqueo de seguridad
+      const proxyUrl = "https://cors-anywhere.herokuapp.com/";
+      const targetUrl = "https://api.onesignal.com/notifications";
+
+      const response = await fetch(proxyUrl + targetUrl, {
         method: "POST",
         headers: {
           "Content-Type": "application/json; charset=utf-8",
-          // Restauramos la palabra "Key" que exige OneSignal
           "Authorization": `Key ${ONESIGNAL_REST_API_KEY}` 
         },
         body: JSON.stringify({
@@ -1825,7 +1827,6 @@ document.addEventListener('DOMContentLoaded', () => {
       const data = await response.json();
       console.log('[OneSignal Push API] Respuesta:', data);
       
-      // Si el id viene en la respuesta, la notificación fue despachada
       if (data.id) {
         showToast('¡Notificación enviada con éxito a los usuarios!', 'check');
       } else if (data.errors) {
@@ -1834,6 +1835,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     } catch (err) {
       console.warn('[OneSignal Push API] Error al enviar masivo:', err);
+      showToast('Error de proxy (Verifica el paso 2 de CORS Anywhere)', 'alert-triangle');
     }
   }
   // Sincronización en la nube directa vía REST API (Garantiza carga instantánea en cualquier navegador)
