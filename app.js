@@ -1448,8 +1448,8 @@ document.addEventListener('DOMContentLoaded', () => {
       await OneSignal.init({
         appId: ONESIGNAL_APP_ID,
         allowLocalhostAsSecureOrigin: true,
-        serviceWorkerParam: { scope: './' },
-        serviceWorkerPath: 'sw.js',
+        serviceWorkerParam: { scope: '/' },
+        serviceWorkerPath: '/sw.js',
         notifyButton: {
           enable: false // Usamos nuestros propios botones elegantes y minimalistas
         }
@@ -1473,7 +1473,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', async () => {
       try {
-        const swReg = await navigator.serviceWorker.register('./sw.js');
+        const swReg = await navigator.serviceWorker.register('/sw.js');
         console.log('[HEDAM PWA] Service Worker registrado:', swReg.scope);
       } catch (err) {
         console.warn('[Service Worker] Registro:', err);
