@@ -1430,48 +1430,41 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 4000);
   }
 
-  // ================= CONFIGURACIÓN OFICIAL ONESIGNAL WEB SDK =================
-  const ONESIGNAL_APP_ID = "f5396dcb-514b-4e99-ba7d-002b2e1b109a";
-  const ONESIGNAL_REST_API_KEY = "os_v2_app_6u4w3s2rjnhjtot5aavs4gyqtjcic7vr3byeawvxxns327swsihqnx6fzhjkzapgs5y3zacu7sauzfnksg4kticnxuxapuclzhfhnpa";
-
-  window.OneSignalDeferred = window.OneSignalDeferred || [];
-  OneSignalDeferred.push(async function(OneSignal) {
-    try {
-      await OneSignal.init({
-        appId: ONESIGNAL_APP_ID,
-        safari_web_id: "web.onesignal.auto.0d8cfe1b-addf-4fe0-8094-42e4bf6360cd",
-        allowLocalhostAsSecureOrigin: true,
-        // Eliminamos las rutas manuales del service worker para dejar que OneSignal use las por defecto
-        notifyButton: {
-          enable: false // Mantenemos tu diseño personalizado, ocultamos la campana flotante por defecto de OneSignal
-        }
-      });
-
-      console.log('[OneSignal] Inicializado con éxito');
-
-      // Escuchar cambios de suscripción
-      OneSignal.User.PushSubscription.addEventListener("change", function(event) {
-        console.log('[OneSignal] Cambio de suscripción:', event);
-        updatePwaButtonVisibility();
-      });
-
-      updatePwaButtonVisibility();
-    } catch (err) {
-      console.warn('[OneSignal] Error de inicialización:', err);
+  let firebaseMessaging = null;
+  try {
+    if (firebase.messaging.isSupported()) {
+      firebaseMessaging = firebase.messaging();
+      console.log('[Firebase FCM] Listo para recibir tokens');
     }
-  });
+  } catch (e) {
+    console.warn('[Firebase FCM] No soportado:', e.message);
+  }
 
-  // Registrar Service Worker
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', async () => {
-      try {
-        // Unificamos el registro para que la PWA use el mismo archivo de OneSignal
-        const swReg = await navigator.serviceWorker.register('/OneSignalSDKWorker.js');
-        console.log('[HEDAM PWA] Service Worker registrado:', swReg.scope);
-      } catch (err) {
-        console.warn('[Service Worker] Registro:', err);
+  // Helper para suscribir usuarios a la base de datos
+  async function suscribirUsuarioFCM() {
+    if (!firebaseMessaging) return false;
+    try {
+      const permission = await Notification.requestPermission();
+      if (permission === 'granted') {
+        const swReg = await navigator.serviceWorker.ready;
+        // Solicitamos un token único de Google usando la VAPID KEY que ya tenías en tu código
+        const token = await firebaseMessaging.getToken({ vapidKey: FIREBASE_VAPID_KEY, serviceWorkerRegistration: swReg });
+        if (token) {
+          // Guardamos el token en una nueva colección llamada 'fcm_tokens'
+          await firestoreDb.collection('fcm_tokens').doc(token).set({
+            plataforma: navigator.platform || 'Desconocida',
+            fechaRegistro: new Date().toISOString()
+          });
+          updatePwaButtonVisibility();
+          showToast('¡Notificaciones activadas con éxito!', 'check-circle-2');
+          return true;
+        }
       }
-    });
+      return false;
+    } catch (err) {
+      console.warn('Error al obtener token FCM:', err);
+      return false;
+    }
   }
 
   // ================= MODAL TUTORIAL NOTIFICACIONES (MUÑECA ROSADA) =================
@@ -1588,30 +1581,21 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       try {
-        if (window.OneSignal && window.OneSignal.Notifications) {
-          await window.OneSignal.Notifications.requestPermission();
-          updatePwaButtonVisibility();
-        } else if ('Notification' in window) {
-          await Notification.requestPermission();
-          updatePwaButtonVisibility();
-        }
-      } catch (err) {
-        console.warn('Error solicitando permisos:', err);
-      }
-
-      // Evaluar el estado final del permiso
+        if (notifTutorialActivateBtn) {
+    notifTutorialActivateBtn.addEventListener('click', async () => {
       if ('Notification' in window && Notification.permission === 'denied') {
         showBlockedNotificationGuide();
-      } else if ('Notification' in window && Notification.permission === 'granted') {
+        return;
+      }
+      // Llamamos a la función de Firebase en lugar de OneSignal
+      const exito = await suscribirUsuarioFCM();
+      if (exito) {
         closeNotifTutorialModal();
-        updatePwaButtonVisibility();
-        showToast('¡Notificaciones activadas con éxito!', 'check-circle-2');
-      } else {
-        closeNotifTutorialModal();
+      } else if ('Notification' in window && Notification.permission === 'denied') {
+        showBlockedNotificationGuide();
       }
     });
   }
-
   // Botón campana del header abre el tutorial elegante
   if (notificationHeaderBtn) {
     notificationHeaderBtn.addEventListener('click', () => {
@@ -1770,25 +1754,22 @@ document.addEventListener('DOMContentLoaded', () => {
     profileContentArea.innerHTML = html;
   }
 
-  // Disparo automático de notificación push a TODOS los dispositivos
+  // Disparo automático ultra-rápido (Sin problemas de CORS ni API Keys)
   async function triggerNewAnnouncementNotification(title, content = '') {
-    showToast('¡Novedad publicada! Enviando notificación a los usuarios...', 'sparkles');
+    showToast('¡Novedad publicada y guardada en Firebase!', 'sparkles');
 
+    // Notificación local solo para ti como confirmación visual
     if ('Notification' in window && Notification.permission === 'granted') {
       try {
-        if (navigator.serviceWorker && navigator.serviceWorker.ready) {
-          navigator.serviceWorker.ready.then((reg) => {
-            reg.showNotification('HEDAMPRO | ' + title, {
-              body: content ? content.substring(0, 140) : 'Se acaba de publicar un nuevo anuncio oficial.',
-              icon: 'assets/icon-192.png',
-              data: { url: './index.html' }
-            });
-          });
-        }
-      } catch (e) {
-        console.warn('[Notificación Local]', e);
-      }
+        const reg = await navigator.serviceWorker.ready;
+        reg.showNotification('HEDAMPRO | ' + title, {
+          body: content ? content.substring(0, 140) : 'Anuncio publicado.',
+          icon: 'assets/icon-192.png'
+        });
+      } catch (e) {}
     }
+    // ¡La magia de envío global la hará Cloud Functions al detectar la novedad en la base de datos!
+  }
 
     try {
       const proxyUrl = "https://cors-anywhere.herokuapp.com/";
