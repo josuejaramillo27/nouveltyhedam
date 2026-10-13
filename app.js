@@ -1754,21 +1754,9 @@ document.addEventListener('DOMContentLoaded', () => {
     profileContentArea.innerHTML = html;
   }
 
-  // Disparo automático ultra-rápido (Sin problemas de CORS ni API Keys)
+  // Disparo automático ultra-rápido
   async function triggerNewAnnouncementNotification(title, content = '') {
-    showToast('¡Novedad publicada y guardada en Firebase!', 'sparkles');
-
-    // Notificación local solo para ti como confirmación visual
-    if ('Notification' in window && Notification.permission === 'granted') {
-      try {
-        const reg = await navigator.serviceWorker.ready;
-        reg.showNotification('HEDAMPRO | ' + title, {
-          body: content ? content.substring(0, 140) : 'Anuncio publicado.',
-          icon: 'assets/icon-192.png'
-        });
-      } catch (e) {}
-    }
-    // ¡La magia de envío global la hará Cloud Functions al detectar la novedad en la base de datos!
+    showToast('¡Novedad publicada! Notificando a los usuarios online...', 'sparkles');
   }
 
     try {
@@ -1891,42 +1879,66 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ================= INICIALIZACIÓN DE ESCUCHA EN TIEMPO REAL FIRESTORE =================
+  let primeraCargaCompletada = false;
+
   function initFirestoreListeners() {
-    // 1. Carga inmediata de respaldo por REST para todos los navegadores
     fetchCloudDataREST();
-
     if (!firestoreDb) return;
-
-    // Eliminar definitivamente la novedad de bienvenida en Firestore si existiera
     deleteAnnouncementFromFirestore('ann_oficial_bienvenida');
 
-    // 2. Escuchar novedades en la nube en tiempo real
     try {
-      firestoreDb.collection('announcements').onSnapshot((snapshot) => {
+      firestoreDb.collection('announcements').onSnapshot(async (snapshot) => {
         if (!snapshot.empty) {
           const cloudList = [];
+          
+          // Solo si NO es la primera carga (es decir, es una novedad nueva en tiempo real)
+          if (primeraCargaCompletada) {
+             snapshot.docChanges().forEach(change => {
+                 // Si detectamos que se AÑADIÓ una novedad nueva
+                 if (change.type === 'added' && change.doc.id !== 'ann_oficial_bienvenida') {
+                     const nuevaNovedad = change.doc.data();
+                     // Si el usuario no es el Admin que la acaba de crear, lanzamos la notificación push
+                     if (!state.isAuthenticated && 'Notification' in window && Notification.permission === 'granted') {
+                         navigator.serviceWorker.ready.then((reg) => {
+                             reg.showNotification('HEDAMPRO | ' + (nuevaNovedad.title || 'Nueva Novedad'), {
+                                 body: nuevaNovedad.content ? nuevaNovedad.content.substring(0, 140) : 'Revisa la nueva información.',
+                                 icon: 'assets/icon-192.png',
+                                 badge: 'assets/badge-96.png'
+                             });
+                         });
+                     }
+                 }
+             });
+          }
+
           snapshot.forEach(doc => {
             if (doc.id !== 'ann_oficial_bienvenida') {
               cloudList.push({ id: doc.id, ...doc.data() });
             }
           });
-          // Ordenar: primero fijados, luego fecha más reciente
+          
           cloudList.sort((a, b) => {
             const aPinned = a.isPinned === true ? 1 : 0;
             const bPinned = b.isPinned === true ? 1 : 0;
             if (aPinned !== bPinned) return bPinned - aPinned;
             return new Date(b.publishedAt || 0) - new Date(a.publishedAt || 0);
           });
+          
           state.announcements = cloudList;
           saveAnnouncements();
+          
           if (!state.selectedAnnouncementId && state.announcements.length > 0) {
             state.selectedAnnouncementId = state.announcements[0].id;
           }
+          
           renderClientView();
           if (state.isAuthenticated) renderAdminDashboard();
           checkAndTriggerAutoPopup();
+
+          // Marcamos que ya pasó la primera carga para empezar a notificar las siguientes
+          primeraCargaCompletada = true;
+
         } else if (state.isAuthenticated && state.announcements.length > 0) {
-          // Primera sincronización hacia Firestore si la colección está vacía
           state.announcements.forEach(a => syncAnnouncementToFirestore(a));
         }
       }, (err) => {
@@ -1936,7 +1948,6 @@ document.addEventListener('DOMContentLoaded', () => {
       console.warn('[Firestore] Error al inicializar listener de anuncios:', e);
     }
 
-    // 3. Escuchar comentarios de la comunidad en tiempo real
     try {
       firestoreDb.collection('comments').onSnapshot((snapshot) => {
         if (!snapshot.empty) {
@@ -1952,12 +1963,8 @@ document.addEventListener('DOMContentLoaded', () => {
           if (state.selectedModerationId) renderModerationDrawer();
           if (state.isAuthenticated) renderAdminDashboard();
         }
-      }, (err) => {
-        console.warn('[Firestore] Escucha de comentarios en espera:', err.message);
       });
-    } catch (e) {
-      console.warn('[Firestore] Error al inicializar listener de comentarios:', e);
-    }
+    } catch (e) {}
   }
 
   // Exponer helper al objeto de la ventana
