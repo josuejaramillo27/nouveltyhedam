@@ -1440,52 +1440,67 @@ document.addEventListener('DOMContentLoaded', () => {
     console.warn('[Firebase FCM] No soportado en este entorno.');
   }
 
-  // Guardar el Token en Firebase para que Render lo lea
+  // Guardar el Token en Firebase para que Render lo lea (VERSIÓN RAYOS X)
   async function suscribirUsuarioFCM() {
-    if (!firebaseMessaging) return false;
+    if (!firebaseMessaging) {
+      console.error('❌ [FCM] El servicio de mensajería no está inicializado.');
+      return false;
+    }
     try {
+      console.log('⏳ [FCM] Verificando permisos de notificación en el navegador...');
       const currentPermission = Notification.permission;
       
-      // Si ya hay permiso o si el usuario acaba de darlo
       if (currentPermission === 'granted' || (await Notification.requestPermission()) === 'granted') {
-        
-        console.log('[Firebase FCM] Solicitando token a Google...');
+        console.log('✅ [FCM] Permisos concedidos. Buscando Service Worker de la PWA...');
         const swReg = await navigator.serviceWorker.ready;
         
-        // Esperamos a que el Service Worker esté activo y libre
+        console.log('⚙️ [FCM] Service Worker encontrado. Estado:', swReg.active ? 'Activo' : 'Inactivo');
+        
         if (swReg.active) {
-            const token = await firebaseMessaging.getToken({ 
-              vapidKey: FIREBASE_VAPID_KEY, 
-              serviceWorkerRegistration: swReg 
-            });
-            
-            if (token) {
-              console.log('[Firebase FCM] Token obtenido con éxito. Guardando en Firestore...');
-              await firestoreDb.collection('fcm_tokens').doc(token).set({
-                plataforma: navigator.platform || 'Desconocida',
-                fechaRegistro: new Date().toISOString(),
-                ultimoUso: new Date().toISOString()
-              }, { merge: true }); // Usamos merge para no borrar datos si el token ya existe
-              
-              updatePwaButtonVisibility();
-              return true;
+            console.log('📡 [FCM] Solicitando token a Google con VAPID KEY...');
+            try {
+                // Aquí es donde se suele quedar colgado. Si falla, el catch de abajo lo atrapará.
+                const token = await firebaseMessaging.getToken({ 
+                  vapidKey: FIREBASE_VAPID_KEY, 
+                  serviceWorkerRegistration: swReg 
+                });
+                
+                if (token) {
+                  console.log('🔑 [FCM] ¡Token obtenido exitosamente! Guardando en Firestore...');
+                  
+                  await firestoreDb.collection('fcm_tokens').doc(token).set({
+                    plataforma: navigator.platform || 'Desconocida',
+                    fechaRegistro: new Date().toISOString(),
+                    ultimoUso: new Date().toISOString()
+                  }, { merge: true });
+                  
+                  console.log('🎉 [FCM] ¡Token guardado en Firebase Firestore con éxito!');
+                  updatePwaButtonVisibility();
+                  return true;
+                } else {
+                  console.warn('⚠️ [FCM] Google no devolvió ningún token.');
+                }
+            } catch (tokenError) {
+                // Si hay problemas de CORS, VAPID Key o Incógnito, saldrá aquí:
+                console.error('❌ [FCM] Error EXACTO al pedir el token a Google:', tokenError);
             }
         } else {
-            console.warn('[Firebase FCM] El Service Worker no está completamente activo aún.');
+            console.warn('⚠️ [FCM] El Service Worker no está completamente activo aún.');
         }
+      } else {
+          console.warn('⚠️ [FCM] El usuario denegó los permisos de notificación.');
       }
       return false;
     } catch (err) {
-      console.warn('[Firebase FCM] Error crítico al obtener token:', err);
+      console.error('❌ [FCM] Error general en suscribirUsuarioFCM:', err);
       return false;
     }
   }
 
-  // --- NUEVA FUNCIÓN: Ejecutar en silencio al cargar la web ---
-  // Si el usuario ya había dado permiso antes (como en tu caso), capturamos el token de inmediato
+  // Ejecución automática al abrir la web
   if ('Notification' in window && Notification.permission === 'granted') {
-    // Esperamos 2 segundos para no ralentizar la carga inicial de la web
     setTimeout(() => {
+        console.log('🔄 [FCM] Intentando capturar token automáticamente...');
         suscribirUsuarioFCM();
     }, 2000);
   }
