@@ -46,6 +46,12 @@
 
         <!-- Acciones Rápidas: Instalar App, Notificaciones y Selector de Tema -->
         <div class="header-actions">
+          <!-- NUEVO: Botón Limpiar Caché (Color Azul) -->
+          <button id="header-refresh-btn" class="btn-outline" style="border-color: #3b82f6; color: #3b82f6; padding: 8px 12px;" onclick="window.hedamApp.hardRefresh()" title="Limpiar caché y actualizar">
+            <span class="vector-icon-wrap" style="color: #3b82f6;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+            </span>
+          </button>
           <!-- Botón Descargar / Instalar App (Visible para todos) -->
           <button id="pwa-install-header-btn" class="btn-outline pwa-install-btn" title="Descargar e Instalar App">
             <span class="vector-icon-wrap anim-bounce" style="color: var(--accent-red);">
@@ -592,12 +598,6 @@
     <footer class="footer">
       <div class="footer-inner" style="display: flex; flex-direction: column; align-items: center; gap: 12px;">
         <span>© 2026 HEDAMPRO. Todos los derechos reservados. Plataforma oficial de anuncios y streaming.</span>
-        
-        <!-- Botón de Limpieza de Caché -->
-        <button onclick="window.hedamApp.hardRefresh()" style="background: transparent; border: 1px solid var(--border-color); color: var(--text-muted); padding: 6px 14px; border-radius: 8px; font-size: 0.75rem; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s;">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
-          FORZAR ACTUALIZACIÓN
-        </button>
       </div>
     </footer>
   </div>
