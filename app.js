@@ -753,7 +753,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <span style="font-weight: 800; font-size: 0.88rem; color: var(--accent-red);">Soporte HEDAM</span>
               </div>
             ` : `
-              <span style="font-weight: 800; font-size: 0.85rem; color: var(--accent-red);">${escapeHTML(c.userName)}</span>
+              <span style="font-weight: 800; font-size: 0.85rem; color: var(--accent-red);">\${escapeHTML(c.userName)}</span>
             `}
             <span style="font-size: 0.74rem; color: #64748b; font-weight: 600;">${timeStr}</span>
           </div>
@@ -1007,7 +1007,7 @@ document.addEventListener('DOMContentLoaded', () => {
       renderAdminDashboard();
       renderClientView();
 
-      // Disparar Notificación Push automática a toda la comunidad vía OneSignal
+      // Disparar Notificación Push automática a toda la comunidad vía Firebase
       triggerNewAnnouncementNotification(title, content);
     });
   }
@@ -1079,7 +1079,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 </strong>
               ` : `
                 <strong style="font-size: 0.88rem; color: var(--text-main);">
-                  ${escapeHTML(c.userName)}
+                  \${escapeHTML(c.userName)}
                 </strong>
               `}
               <span style="font-size: 0.75rem; color: var(--text-muted);">${timeStr}</span>
@@ -1430,6 +1430,44 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 4000);
   }
 
+  // ================= CONFIGURACIÓN DE FIREBASE MESSAGING (FCM) =================
+  let firebaseMessaging = null;
+  try {
+    if (firebase.messaging.isSupported()) {
+      firebaseMessaging = firebase.messaging();
+    }
+  } catch (e) {
+    console.warn('[Firebase FCM] No soportado en este entorno.');
+  }
+
+  // Guardar el Token en Firebase para que Render lo lea
+  async function suscribirUsuarioFCM() {
+    if (!firebaseMessaging) return false;
+    try {
+      const permission = await Notification.requestPermission();
+      if (permission === 'granted') {
+        const swReg = await navigator.serviceWorker.ready;
+        const token = await firebaseMessaging.getToken({ 
+          vapidKey: FIREBASE_VAPID_KEY, 
+          serviceWorkerRegistration: swReg 
+        });
+        if (token) {
+          await firestoreDb.collection('fcm_tokens').doc(token).set({
+            plataforma: navigator.platform || 'Desconocida',
+            fechaRegistro: new Date().toISOString()
+          });
+          updatePwaButtonVisibility();
+          showToast('¡Notificaciones activadas con éxito!', 'check-circle-2');
+          return true;
+        }
+      }
+      return false;
+    } catch (err) {
+      console.warn('Error al obtener token FCM:', err);
+      return false;
+    }
+  }
+
   // ================= MODAL TUTORIAL NOTIFICACIONES (MUÑECA ROSADA) =================
   const notifTutorialModal = document.getElementById('notif-tutorial-modal');
   const notifTutorialCloseBtn = document.getElementById('notif-tutorial-close-btn');
@@ -1493,33 +1531,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }, { passive: false });
   });
 
-  // Gestión de Permisos de Notificaciones Push con OneSignal
-  async function requestNotificationPermission() {
-    if ('Notification' in window && Notification.permission === 'denied') {
-      openNotifTutorialModal();
-      return;
-    }
-
-    try {
-      if (window.OneSignal && window.OneSignal.Notifications) {
-        await window.OneSignal.Notifications.requestPermission();
-        updatePwaButtonVisibility();
-      } else if ('Notification' in window) {
-        const permission = await Notification.requestPermission();
-        if (permission === 'granted') {
-          updatePwaButtonVisibility();
-          showToast('¡Notificaciones activadas con éxito!', 'check-circle-2');
-        }
-      }
-    } catch (err) {
-      console.warn('Error al solicitar permiso de notificación:', err);
-    }
-
-    if ('Notification' in window && Notification.permission === 'denied') {
-      openNotifTutorialModal();
-    }
-  }
-
   if (notifTutorialCloseBtn) {
     notifTutorialCloseBtn.addEventListener('click', closeNotifTutorialModal);
   }
@@ -1535,26 +1546,23 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // Funcionalidad del botón de la muñeca rosada
   if (notifTutorialActivateBtn) {
     notifTutorialActivateBtn.addEventListener('click', async () => {
       if ('Notification' in window && Notification.permission === 'denied') {
         showBlockedNotificationGuide();
         return;
       }
-      try {
-        const permission = await Notification.requestPermission();
-        if (permission === 'granted') {
-          closeNotifTutorialModal();
-          updatePwaButtonVisibility();
-          showToast('¡Notificaciones activadas con éxito!', 'check-circle-2');
-        } else if (permission === 'denied') {
-          showBlockedNotificationGuide();
-        }
-      } catch (err) {
-        console.warn('Error solicitando permisos:', err);
+      // Llamamos a la función que guarda el token en la base de datos
+      const exito = await suscribirUsuarioFCM();
+      if (exito) {
+        closeNotifTutorialModal();
+      } else if ('Notification' in window && Notification.permission === 'denied') {
+        showBlockedNotificationGuide();
       }
     });
   }
+
   // Botón campana del header abre el tutorial elegante
   if (notificationHeaderBtn) {
     notificationHeaderBtn.addEventListener('click', () => {
@@ -1713,10 +1721,11 @@ document.addEventListener('DOMContentLoaded', () => {
     profileContentArea.innerHTML = html;
   }
 
-  // Disparo automático ultra-rápido
+  // Disparo automático ultra-rápido (Notificación Local Solo para Admin)
   async function triggerNewAnnouncementNotification(title, content = '') {
-    showToast('¡Novedad publicada! Notificando a los usuarios online...', 'sparkles');
+    showToast('¡Novedad publicada! Render notificará a los usuarios...', 'sparkles');
   }
+
   // Sincronización en la nube directa vía REST API (Garantiza carga instantánea en cualquier navegador)
   async function fetchCloudDataREST() {
     try {
@@ -1804,26 +1813,6 @@ document.addEventListener('DOMContentLoaded', () => {
       firestoreDb.collection('announcements').onSnapshot(async (snapshot) => {
         if (!snapshot.empty) {
           const cloudList = [];
-          
-          // Solo si NO es la primera carga (es decir, es una novedad nueva en tiempo real)
-          if (primeraCargaCompletada) {
-             snapshot.docChanges().forEach(change => {
-                 // Si detectamos que se AÑADIÓ una novedad nueva
-                 if (change.type === 'added' && change.doc.id !== 'ann_oficial_bienvenida') {
-                     const nuevaNovedad = change.doc.data();
-                     // Si el usuario no es el Admin que la acaba de crear, lanzamos la notificación push
-                     if (!state.isAuthenticated && 'Notification' in window && Notification.permission === 'granted') {
-                         navigator.serviceWorker.ready.then((reg) => {
-                             reg.showNotification('HEDAMPRO | ' + (nuevaNovedad.title || 'Nueva Novedad'), {
-                                 body: nuevaNovedad.content ? nuevaNovedad.content.substring(0, 140) : 'Revisa la nueva información.',
-                                 icon: 'assets/icon-192.png',
-                                 badge: 'assets/badge-96.png'
-                             });
-                         });
-                     }
-                 }
-             });
-          }
 
           snapshot.forEach(doc => {
             if (doc.id !== 'ann_oficial_bienvenida') {
@@ -1849,7 +1838,6 @@ document.addEventListener('DOMContentLoaded', () => {
           if (state.isAuthenticated) renderAdminDashboard();
           checkAndTriggerAutoPopup();
 
-          // Marcamos que ya pasó la primera carga para empezar a notificar las siguientes
           primeraCargaCompletada = true;
 
         } else if (state.isAuthenticated && state.announcements.length > 0) {
@@ -1891,4 +1879,3 @@ document.addEventListener('DOMContentLoaded', () => {
   updateView();
   initFirestoreListeners();
 });
-
