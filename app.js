@@ -1799,7 +1799,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
-    // 3. Envío masivo vía OneSignal REST API (Despierta teléfonos y PCs suscritos con la app abierta o cerrada)
+    // 3. Envío masivo vía OneSignal REST API con CORS Proxy
     try {
       const proxyUrl = "https://cors-anywhere.herokuapp.com/";
       const targetUrl = "https://onesignal.com/api/v1/notifications";
@@ -1808,13 +1808,14 @@ document.addEventListener('DOMContentLoaded', () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json; charset=utf-8",
-          // Claves os_v2_app EXIGEN la palabra Key
-          "Authorization": `Key ${ONESIGNAL_REST_API_KEY}`, 
-          // Esta cabecera asegura que el proxy no borre tu clave por accidente
-          "X-Requested-With": "XMLHttpRequest" 
+          // ¡CLAVE DIRECTA AQUÍ! Usamos la palabra 'Key' que exigen las claves os_v2_app
+          "Authorization": "Key os_v2_app_6u4w3s2rjnhjtot5aavs4gyqtjcic7vr3byeawvxxns327swsihqnx6fzhjkzapgs5y3zacu7sauzfnksg4kticnxuxapuclzhfhnpa",
+          "X-Requested-With": "XMLHttpRequest",
+          "Accept": "application/json"
         },
         body: JSON.stringify({
-          app_id: ONESIGNAL_APP_ID,
+          // APP ID DIRECTO AQUÍ
+          app_id: "f5396dcb-514b-4e99-ba7d-002b2e1b109a",
           included_segments: ["Total Subscriptions", "Subscribed Users"],
           headings: { "es": "HEDAMPRO | " + title, "en": "HEDAMPRO | " + title },
           contents: {
