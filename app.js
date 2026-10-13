@@ -677,6 +677,19 @@ document.addEventListener('DOMContentLoaded', () => {
       if (state.showCommentsDrawer) {
         modalCommentsDrawer.classList.remove('view-hidden');
         updateModalCommentsToggleBtn(true);
+        
+        // --- CÓDIGO NUEVO PARA HACER SCROLL AUTOMÁTICO ---
+        setTimeout(() => {
+          const scrollContainer = document.querySelector('.modal-body-scrollable');
+          if (scrollContainer) {
+            scrollContainer.scrollTo({ 
+              top: scrollContainer.scrollHeight, 
+              behavior: 'smooth' 
+            });
+          }
+        }, 50); // Un pequeño retraso para asegurar que el drawer ya es visible
+        // --------------------------------------------------
+
       } else {
         modalCommentsDrawer.classList.add('view-hidden');
         updateModalCommentsToggleBtn(false);
