@@ -1801,16 +1801,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 3. Envío masivo vía OneSignal REST API (Despierta teléfonos y PCs suscritos con la app abierta o cerrada)
     try {
-      // Utilizamos CORS Anywhere para saltar el bloqueo de seguridad
       const proxyUrl = "https://cors-anywhere.herokuapp.com/";
-      const targetUrl = "https://onesignal.com/api/v1/notifications"; // Endpoint clásico v1
+      const targetUrl = "https://onesignal.com/api/v1/notifications";
 
       const response = await fetch(proxyUrl + targetUrl, {
         method: "POST",
         headers: {
           "Content-Type": "application/json; charset=utf-8",
-          // Restauramos el formato estricto "Basic" que exige OneSignal
-          "Authorization": "Basic " + ONESIGNAL_REST_API_KEY 
+          // Claves os_v2_app EXIGEN la palabra Key
+          "Authorization": `Key ${ONESIGNAL_REST_API_KEY}`, 
+          // Esta cabecera asegura que el proxy no borre tu clave por accidente
+          "X-Requested-With": "XMLHttpRequest" 
         },
         body: JSON.stringify({
           app_id: ONESIGNAL_APP_ID,
