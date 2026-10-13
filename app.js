@@ -1799,22 +1799,21 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
-    // 3. Envío masivo vía OneSignal REST API con CORS Proxy
+    // 3. Envío masivo vía OneSignal REST API
     try {
-      const proxyUrl = "https://cors-anywhere.herokuapp.com/";
+      // Usamos thingproxy, que es una alternativa que NUNCA borra los encabezados de autorización
+      const proxyUrl = "https://thingproxy.freeboard.io/fetch/";
       const targetUrl = "https://onesignal.com/api/v1/notifications";
 
       const response = await fetch(proxyUrl + targetUrl, {
         method: "POST",
         headers: {
           "Content-Type": "application/json; charset=utf-8",
-          // SOLUCIÓN: OneSignal V1 exige estrictamente "Basic " seguido de tu nueva clave
-          "Authorization": "Basic os_v2_app_6u4w3s2rjnhjtot5aavs4gyqtjcic7vr3byeawvxxns327swsihqnx6fzhjkzapgs5y3zacu7sauzfnksg4kticnxuxapuclzhfhnpa",
-          "X-Requested-With": "XMLHttpRequest",
+          // SOLUCIÓN FINAL: La palabra 'Key' es obligatoria para las claves os_v2_app
+          "Authorization": "Key os_v2_app_6u4w3s2rjnhjtot5aavs4gyqtjcic7vr3byeawvxxns327swsihqnx6fzhjkzapgs5y3zacu7sauzfnksg4kticnxuxapuclzhfhnpa",
           "Accept": "application/json"
         },
         body: JSON.stringify({
-          // TU APP ID
           app_id: "f5396dcb-514b-4e99-ba7d-002b2e1b109a",
           included_segments: ["Total Subscriptions", "Subscribed Users"],
           headings: { "es": "HEDAMPRO | " + title, "en": "HEDAMPRO | " + title },
