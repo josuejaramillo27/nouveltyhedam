@@ -1,77 +1,78 @@
-// Integración oficial OneSignal Web Push SDK
-importScripts("https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.sw.js");
+importScripts('https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js');
+importScripts('https://www.gstatic.com/firebasejs/10.9.0/firebase-messaging-compat.js');
 
-// Service Worker para HEDAM Novedades PWA
-const CACHE_NAME = 'hedam-cache-v7';
-const ASSETS_TO_CACHE = [
-  './',
-  './index.html',
-  './style.css',
-  './app.js',
-  './manifest.json',
-  './assets/icon-192.png',
-  './assets/icon-512.png',
-  './assets/icon-maskable-192.png',
-  './assets/icon-maskable-512.png',
-  './assets/logohedam-app.png',
-  './assets/logohedam.png',
-  './assets/mascot-pink.png',
-  './assets/badge-96.png'
-];
+// 1. Inicializar Firebase en Segundo Plano
+firebase.initializeApp({
+  apiKey: "AIzaSyBmM0YUumjsEo0ApyJ78ah1OQPxcMzFcNY",
+  projectId: "nouveltyhedam",
+  messagingSenderId: "518596302149",
+  appId: "1:518596302149:web:10b3e91c765dfc65841a2c"
+});
 
-// Instalación rápida sin bloquear por timeouts
-self.addEventListener('install', (event) => {
-  self.skipWaiting();
+const messaging = firebase.messaging();
+
+// 2. Escuchar Notificaciones Push cuando la web está cerrada
+messaging.onBackgroundMessage((payload) => {
+  console.log('[FCM] Notificación recibida en segundo plano:', payload);
+  const notificationTitle = payload.notification.title;
+  const notificationOptions = {
+    body: payload.notification.body,
+    icon: 'assets/icon-192.png',
+    badge: 'assets/badge-96.png',
+    data: { url: './index.html' }
+  };
+  self.registration.showNotification(notificationTitle, notificationOptions);
+});
+
+// Al hacer clic en la notificación
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const targetUrl = './index.html';
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS_TO_CACHE);
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
+      for (let client of windowClients) {
+        if (client.url.includes('index.html') && 'focus' in client) return client.focus();
+      }
+      if (clients.openWindow) return clients.openWindow(targetUrl);
     })
   );
 });
 
-// Activación y limpieza de cachés antiguos
-self.addEventListener('activate', (event) => {
-  event.waitUntil(
-    caches.keys().then((keys) => {
-      return Promise.all(
-        keys.map((key) => {
-          if (key !== CACHE_NAME) {
-            return caches.delete(key);
-          }
-        })
-      );
-    }).then(() => self.clients.claim())
-  );
+// 3. Service Worker para HEDAM Novedades PWA (Caché)
+const CACHE_NAME = 'hedam-cache-v8';
+const ASSETS_TO_CACHE = [
+  './', './index.html', './style.css', './app.js', './manifest.json',
+  './assets/icon-192.png', './assets/icon-512.png', './assets/logohedam.png', './assets/mascot-pink.png'
+];
+
+self.addEventListener('install', (event) => {
+  self.skipWaiting();
+  event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS_TO_CACHE)));
 });
 
-// Estrategia Network First con fallback a Cache
+self.addEventListener('activate', (event) => {
+  event.waitUntil(caches.keys().then((keys) => Promise.all(keys.map((key) => {
+    if (key !== CACHE_NAME) return caches.delete(key);
+  }))).then(() => self.clients.claim()));
+});
+
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
-  // AÑADIDO PARA EVITAR EL ERROR DE EXTENSIONES DE CHROME
   if (!event.request.url.startsWith('http')) return; 
-
   event.respondWith(
-    fetch(event.request)
-      .then((networkResponse) => {
-        if (networkResponse && networkResponse.status === 200) {
-          const responseToCache = networkResponse.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseToCache);
-          });
+    fetch(event.request).then((networkResponse) => {
+      if (networkResponse && networkResponse.status === 200) {
+        const responseToCache = networkResponse.clone();
+        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseToCache));
+      }
+      return networkResponse;
+    }).catch(() => {
+      return caches.match(event.request).then((cachedResponse) => {
+        if (cachedResponse) return cachedResponse;
+        if (event.request.headers.get('accept') && event.request.headers.get('accept').includes('text/html')) {
+          return caches.match('./index.html');
         }
-        return networkResponse;
-      })
-      .catch(() => {
-        return caches.match(event.request).then((cachedResponse) => {
-          if (cachedResponse) return cachedResponse;
-          if (event.request.headers.get('accept') && event.request.headers.get('accept').includes('text/html')) {
-            return caches.match('./index.html');
-          }
-        });
-      })
+      });
+    })
   );
 });
-
-// Nota importante: Eliminamos los eventos de recepción de notificaciones ('push' y 'notificationclick') 
-// que tenías antes en este archivo. OneSignal ahora los manejará automáticamente gracias 
-// a la primera línea importScripts.
