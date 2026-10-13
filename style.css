@@ -1389,6 +1389,113 @@ body.modal-open {
 }
 
 @media (max-width: 640px) {
+  /* ================= REDISEÑO DE TARJETAS NOVEDADES (CELULAR) ================= */
+  
+  /* Ocultar contenido de PC en celular */
+  .desktop-card-content {
+    display: none !important;
+  }
+  
+  /* Mostrar diseño horizontal en celular */
+  .mobile-card-content {
+    display: flex !important;
+    align-items: center;
+    padding: 16px;
+    gap: 14px;
+    width: 100%;
+  }
+
+  /* La tarjeta en sí ya no necesita ser en columna */
+  .novedad-card {
+    border-radius: 18px;
+    background: #0b0c10; /* Fondo súper oscuro como en tu foto */
+    border: 1px solid #1a1c23;
+  }
+  .novedad-card:hover {
+    background: #11131a;
+  }
+
+  /* Caja oscura para la campana animada */
+  .mobile-card-icon-box {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: rgba(255, 30, 39, 0.08);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  /* Sección central de texto */
+  .mobile-card-text {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+    overflow: hidden;
+  }
+
+  .mobile-card-date {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    font-weight: 600;
+  }
+
+  .mobile-card-title {
+    font-size: 1.05rem !important;
+    font-weight: 800;
+    color: var(--text-main);
+    line-height: 1.25;
+    margin: 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-transform: uppercase;
+  }
+
+  /* Lado derecho: Etiquetas sólidas rojas y flecha circular */
+  .mobile-card-action {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    flex-shrink: 0;
+  }
+
+  .mobile-badge-solid {
+    background: var(--accent-red);
+    color: #ffffff;
+    font-size: 0.65rem;
+    font-weight: 900;
+    padding: 3px 8px;
+    border-radius: 9999px;
+    letter-spacing: 0.5px;
+    display: inline-flex;
+    align-items: center;
+  }
+  
+  .mobile-badge-solid.pinned {
+    background: rgba(255, 30, 39, 0.15);
+    color: var(--accent-red);
+    border: 1px solid rgba(255, 30, 39, 0.4);
+  }
+
+  .mobile-action-circle {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: rgba(255, 30, 39, 0.1);
+    color: var(--accent-red);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(255, 30, 39, 0.3);
+  }
   /* Header Móvil Ultra Optimizado: Espacio sin recortes */
   .header {
     padding: 10px 0;
@@ -1698,3 +1805,18 @@ body.modal-open {
   background: rgba(59, 130, 246, 0.1) !important;
   border-color: #3b82f6 !important;
 }
+
+/* Ocultar diseño móvil en pantallas grandes */
+  .mobile-card-content {
+    display: none;
+  }
+  /* Estilos para etiquetas nuevas en PC */
+  .badge-new {
+    background: var(--accent-red);
+    color: white;
+    padding: 3px 8px;
+    border-radius: 9999px;
+    font-size: 0.68rem;
+    font-weight: 800;
+    text-transform: uppercase;
+  }
