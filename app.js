@@ -1373,6 +1373,14 @@ document.addEventListener('DOMContentLoaded', () => {
         notificationHeaderBtn.style.display = 'inline-flex';
       }
     }
+    const refreshBtn = document.getElementById('header-refresh-btn');
+    if (refreshBtn) {
+      if (installed) {
+        refreshBtn.classList.add('installed-mobile');
+      } else {
+        refreshBtn.classList.remove('installed-mobile');
+      }
+    }
   }
 
   // ================= LISTENERS DE INSTALACIÓN PWA (DESCARGAR APP) =================
