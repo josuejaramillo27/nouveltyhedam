@@ -1432,19 +1432,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ================= CONFIGURACIÓN OFICIAL ONESIGNAL WEB SDK =================
   const ONESIGNAL_APP_ID = "f5396dcb-514b-4e99-ba7d-002b2e1b109a";
-  // Clave de API OneSignal codificada para proteger el repositorio público
-  const ONESIGNAL_REST_API_KEY = "os_v2_app_6u4w3s2rjnhjtot5aavs4gyqtk76vf2qh33u344ixxlmnxsj7s74wr2j6vpkq3viiqgwi5brjgxe7jvd2jphoybxcrhywnyvn2jxnyi";
+  const ONESIGNAL_REST_API_KEY = "os_v2_app_6u4w3s2rjnhjtot5aavs4gyqtjcic7vr3byeawvxxns327swsihqnx6fzhjkzapgs5y3zacu7sauzfnksg4kticnxuxapuclzhfhnpa";
 
   window.OneSignalDeferred = window.OneSignalDeferred || [];
   OneSignalDeferred.push(async function(OneSignal) {
     try {
       await OneSignal.init({
         appId: ONESIGNAL_APP_ID,
+        safari_web_id: "web.onesignal.auto.0d8cfe1b-addf-4fe0-8094-42e4bf6360cd",
         allowLocalhostAsSecureOrigin: true,
-        serviceWorkerParam: { scope: '/' },
-        serviceWorkerPath: '/sw.js',
+        // Eliminamos las rutas manuales del service worker para dejar que OneSignal use las por defecto
         notifyButton: {
-          enable: false // Usamos nuestros propios botones elegantes y minimalistas
+          enable: false // Mantenemos tu diseño personalizado, ocultamos la campana flotante por defecto de OneSignal
         }
       });
 
