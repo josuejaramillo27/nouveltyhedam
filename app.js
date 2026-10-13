@@ -1803,13 +1803,14 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       // Utilizamos CORS Anywhere para saltar el bloqueo de seguridad
       const proxyUrl = "https://cors-anywhere.herokuapp.com/";
-      const targetUrl = "https://api.onesignal.com/notifications";
+      const targetUrl = "https://onesignal.com/api/v1/notifications"; // Endpoint clásico v1
 
       const response = await fetch(proxyUrl + targetUrl, {
         method: "POST",
         headers: {
           "Content-Type": "application/json; charset=utf-8",
-          "Authorization": `Key ${ONESIGNAL_REST_API_KEY}` 
+          // Restauramos el formato estricto "Basic" que exige OneSignal
+          "Authorization": "Basic " + ONESIGNAL_REST_API_KEY 
         },
         body: JSON.stringify({
           app_id: ONESIGNAL_APP_ID,
@@ -1835,7 +1836,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     } catch (err) {
       console.warn('[OneSignal Push API] Error al enviar masivo:', err);
-      showToast('Error de proxy (Verifica el paso 2 de CORS Anywhere)', 'alert-triangle');
+      showToast('Error de conexión con el servidor', 'alert-triangle');
     }
   }
   // Sincronización en la nube directa vía REST API (Garantiza carga instantánea en cualquier navegador)
