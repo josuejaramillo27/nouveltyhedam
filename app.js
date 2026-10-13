@@ -756,7 +756,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <span style="font-weight: 800; font-size: 0.88rem; color: var(--accent-red);">Soporte HEDAM</span>
               </div>
             ` : `
-              <span style="font-weight: 800; font-size: 0.85rem; color: var(--accent-red);">\${escapeHTML(c.userName)}</span>
+              <span style="font-weight: 800; font-size: 0.85rem; color: var(--accent-red);">${escapeHTML(c.userName)}</span>
             `}
             <span style="font-size: 0.74rem; color: #64748b; font-weight: 600;">${timeStr}</span>
           </div>
@@ -1092,7 +1092,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 </strong>
               ` : `
                 <strong style="font-size: 0.88rem; color: var(--text-main);">
-                  \${escapeHTML(c.userName)}
+                  ${escapeHTML(c.userName)}
                 </strong>
               `}
               <span style="font-size: 0.75rem; color: var(--text-muted);">${timeStr}</span>
