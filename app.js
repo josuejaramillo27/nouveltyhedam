@@ -1574,25 +1574,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (notifTutorialActivateBtn) {
     notifTutorialActivateBtn.addEventListener('click', async () => {
-      // Si el navegador ya las tiene bloqueadas, mostrar de inmediato la guía paso a paso
       if ('Notification' in window && Notification.permission === 'denied') {
         showBlockedNotificationGuide();
         return;
       }
-
       try {
-        if (notifTutorialActivateBtn) {
-    notifTutorialActivateBtn.addEventListener('click', async () => {
-      if ('Notification' in window && Notification.permission === 'denied') {
-        showBlockedNotificationGuide();
-        return;
-      }
-      // Llamamos a la función de Firebase en lugar de OneSignal
-      const exito = await suscribirUsuarioFCM();
-      if (exito) {
-        closeNotifTutorialModal();
-      } else if ('Notification' in window && Notification.permission === 'denied') {
-        showBlockedNotificationGuide();
+        const permission = await Notification.requestPermission();
+        if (permission === 'granted') {
+          closeNotifTutorialModal();
+          updatePwaButtonVisibility();
+          showToast('¡Notificaciones activadas con éxito!', 'check-circle-2');
+        } else if (permission === 'denied') {
+          showBlockedNotificationGuide();
+        }
+      } catch (err) {
+        console.warn('Error solicitando permisos:', err);
       }
     });
   }
@@ -1757,51 +1753,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // Disparo automático ultra-rápido
   async function triggerNewAnnouncementNotification(title, content = '') {
     showToast('¡Novedad publicada! Notificando a los usuarios online...', 'sparkles');
-  }
-
-    try {
-      const proxyUrl = "https://cors-anywhere.herokuapp.com/";
-      const targetUrl = "https://onesignal.com/api/v1/notifications";
-
-      // 1. Aquí colocamos la cadena exacta que te dio la consola
-      const claveOculta = "b3NfdjJfYXBwXzZ1NHczczJyam5oanRvdDVhYXZzNGd5cXRrcm5oeXdkcHNjdXdlNGFoYm9wenlmNDR1dHNtam5tcmI0cHc1b3oybDdnaW5xdTZnZ3dqdXVmd29paXNtdTJrZXN6d3U0aHFzenNncHk=";
-      
-      // 2. El código la desencripta en vivo (Los robots de GitHub no pueden leer esto)
-      const apiKeyReal = atob(claveOculta);
-
-      const response = await fetch(proxyUrl + targetUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json; charset=utf-8",
-          // Usamos la palabra Key obligatoria para las claves modernas
-          "Authorization": `Key ${apiKeyReal}`,
-          "X-Requested-With": "XMLHttpRequest",
-          "Accept": "application/json"
-        },
-        body: JSON.stringify({
-          app_id: "f5396dcb-514b-4e99-ba7d-002b2e1b109a",
-          included_segments: ["Total Subscriptions", "Subscribed Users"],
-          headings: { "es": "HEDAMPRO | " + title, "en": "HEDAMPRO | " + title },
-          contents: {
-            "es": content ? content.substring(0, 140) : "Se acaba de publicar una nueva novedad oficial en la plataforma."
-          },
-          url: "https://nouveltyhedam.com"
-        })
-      });
-
-      const data = await response.json();
-      console.log('[OneSignal Push API] Respuesta:', data);
-      
-      if (data.id) {
-        showToast('¡Notificación enviada con éxito a toda la comunidad!', 'check');
-      } else {
-        console.warn('[OneSignal] Errores al enviar:', data);
-        showToast('Error al notificar: Verifica tu clave encriptada', 'alert-triangle');
-      }
-    } catch (err) {
-      console.warn('[OneSignal Push API] Error de conexión:', err);
-      showToast('Error de conexión. ¿Activaste el CORS Demo?', 'alert-triangle');
-    }
   }
   // Sincronización en la nube directa vía REST API (Garantiza carga instantánea en cualquier navegador)
   async function fetchCloudDataREST() {
