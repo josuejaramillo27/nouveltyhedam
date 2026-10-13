@@ -1,4 +1,11 @@
 document.addEventListener('DOMContentLoaded', () => {
+  // ================= BLOQUEO DE CLIC DERECHO =================
+  document.addEventListener('contextmenu', (e) => {
+    // Bloquea el clic derecho a todos, excepto si has iniciado sesión como Admin
+    if (!state.isAuthenticated) {
+      e.preventDefault();
+    }
+  });
   // ================= SISTEMA DE ICONOS VECTORIALES (LUCIDE MINIMALISTAS) =================
   const ICONS = {
     'megaphone': `<path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/>`,
@@ -1272,6 +1279,30 @@ document.addEventListener('DOMContentLoaded', () => {
         renderModerationDrawer();
         renderAdminDashboard();
         renderClientView();
+      }
+    },
+    // --- NUEVA FUNCIÓN: LIMPIEZA PROFUNDA DE CACHÉ ---
+    hardRefresh: async () => {
+      showToast('Limpiando memoria caché...', 'rotate-ccw');
+      try {
+        // 1. Borrar el almacenamiento de caché de la PWA
+        if ('caches' in window) {
+          const cacheNames = await caches.keys();
+          await Promise.all(cacheNames.map(name => caches.delete(name)));
+        }
+        // 2. Destruir Service Workers zombis
+        if ('serviceWorker' in navigator) {
+          const registrations = await navigator.serviceWorker.getRegistrations();
+          for (let reg of registrations) {
+            await reg.unregister();
+          }
+        }
+        // 3. Recargar la página limpia
+        setTimeout(() => {
+          window.location.reload();
+        }, 800);
+      } catch (e) {
+        window.location.reload(); // Fallback de seguridad
       }
     }
   };
