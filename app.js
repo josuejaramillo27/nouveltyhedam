@@ -1808,13 +1808,13 @@ document.addEventListener('DOMContentLoaded', () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json; charset=utf-8",
-          // ¡CLAVE DIRECTA AQUÍ! Usamos la palabra 'Key' que exigen las claves os_v2_app
-          "Authorization": "Key os_v2_app_6u4w3s2rjnhjtot5aavs4gyqtjcic7vr3byeawvxxns327swsihqnx6fzhjkzapgs5y3zacu7sauzfnksg4kticnxuxapuclzhfhnpa",
+          // SOLUCIÓN: OneSignal V1 exige estrictamente "Basic " seguido de tu nueva clave
+          "Authorization": "Basic os_v2_app_6u4w3s2rjnhjtot5aavs4gyqtjcic7vr3byeawvxxns327swsihqnx6fzhjkzapgs5y3zacu7sauzfnksg4kticnxuxapuclzhfhnpa",
           "X-Requested-With": "XMLHttpRequest",
           "Accept": "application/json"
         },
         body: JSON.stringify({
-          // APP ID DIRECTO AQUÍ
+          // TU APP ID
           app_id: "f5396dcb-514b-4e99-ba7d-002b2e1b109a",
           included_segments: ["Total Subscriptions", "Subscribed Users"],
           headings: { "es": "HEDAMPRO | " + title, "en": "HEDAMPRO | " + title },
