@@ -1433,7 +1433,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // ================= CONFIGURACIÓN OFICIAL ONESIGNAL WEB SDK =================
   const ONESIGNAL_APP_ID = "f5396dcb-514b-4e99-ba7d-002b2e1b109a";
   // Clave de API OneSignal codificada para proteger el repositorio público
-  const ONESIGNAL_REST_API_KEY = "os_v2_app_6u4w3s2rjnhjtot5aavs4gyqtkkm6rkmmsneakem3timrkh6dvqzzrkvamxowalhr7dxl4bpl7ymtu2224wuoufusbyrlhfpmxgih2i";
+  const ONESIGNAL_REST_API_KEY = "os_v2_app_6u4w3s2rjnhjtot5aavs4gyqtk76vf2qh33u344ixxlmnxsj7s74wr2j6vpkq3viiqgwi5brjgxe7jvd2jphoybxcrhywnyvn2jxnyi";
 
   window.OneSignalDeferred = window.OneSignalDeferred || [];
   OneSignalDeferred.push(async function(OneSignal) {
