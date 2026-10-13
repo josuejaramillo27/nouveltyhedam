@@ -47,7 +47,8 @@ self.addEventListener('activate', (event) => {
 // Estrategia Network First con fallback a Cache
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
-  if (!event.request.url.startsWith('http')) return;
+  // AÑADIDO PARA EVITAR EL ERROR DE EXTENSIONES DE CHROME
+  if (!event.request.url.startsWith('http')) return; 
 
   event.respondWith(
     fetch(event.request)
@@ -71,53 +72,6 @@ self.addEventListener('fetch', (event) => {
   );
 });
 
-// Recepción y despliegue de Notificaciones Push
-self.addEventListener('push', (event) => {
-  let data = {
-    title: 'HEDAMPRO | Nueva Novedad',
-    body: 'Hay una nueva actualización disponible en la plataforma.',
-    icon: 'assets/icon-192.png',
-    badge: 'assets/badge-96.png',
-    data: { url: './index.html' }
-  };
-
-  if (event.data) {
-    try {
-      const payload = event.data.json();
-      data = { ...data, ...payload };
-    } catch {
-      data.body = event.data.text();
-    }
-  }
-
-  const options = {
-    body: data.body,
-    icon: data.icon || 'assets/icon-192.png',
-    badge: data.badge || 'assets/badge-96.png',
-    vibrate: [100, 50, 100],
-    data: data.data || { url: './index.html' }
-  };
-
-  event.waitUntil(
-    self.registration.showNotification(data.title, options)
-  );
-});
-
-// Al hacer clic en la notificación
-self.addEventListener('notificationclick', (event) => {
-  event.notification.close();
-  const targetUrl = (event.notification.data && event.notification.data.url) ? event.notification.data.url : './index.html';
-
-  event.waitUntil(
-    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
-      for (let client of windowClients) {
-        if (client.url.includes('index.html') && 'focus' in client) {
-          return client.focus();
-        }
-      }
-      if (clients.openWindow) {
-        return clients.openWindow(targetUrl);
-      }
-    })
-  );
-});
+// Nota importante: Eliminamos los eventos de recepción de notificaciones ('push' y 'notificationclick') 
+// que tenías antes en este archivo. OneSignal ahora los manejará automáticamente gracias 
+// a la primera línea importScripts.
