@@ -1416,7 +1416,15 @@ body.modal-open {
     gap: 5px; /* Espacio compacto perfecto para que quepan todos los botones sin desborde */
     flex-shrink: 0;
   }
-
+  /* NUEVO: Lógica del botón de Caché en Móvil */
+  #header-refresh-btn {
+    display: none !important; /* Oculto por defecto en celulares */
+  }
+  
+  #header-refresh-btn.installed-mobile {
+    display: inline-flex !important; /* Se muestra si tiene la clase */
+    padding: 6px 8px !important;
+  }
   /* Botón Instalar más compacto en móvil */
   .pwa-install-btn {
     padding: 6px 9px;
@@ -1684,4 +1692,9 @@ body.modal-open {
     font-size: 0.82rem;
     padding: 10px 16px;
   }
+}
+
+#header-refresh-btn:hover {
+  background: rgba(59, 130, 246, 0.1) !important;
+  border-color: #3b82f6 !important;
 }
