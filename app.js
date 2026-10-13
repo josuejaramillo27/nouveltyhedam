@@ -1941,6 +1941,23 @@ document.addEventListener('DOMContentLoaded', () => {
   updatePwaButtonVisibility();
 
   // ================= ARRANQUE INICIAL =================
+  
+  // 1. REGISTRAR EL SERVICE WORKER (VITAL PARA PWA Y NOTIFICACIONES)
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js')
+        .then((registration) => {
+          console.log('[PWA] Service Worker registrado con éxito. Scope:', registration.scope);
+        })
+        .catch((error) => {
+          console.error('[PWA] Error al registrar el Service Worker:', error);
+        });
+    });
+  } else {
+    console.warn('[PWA] Los Service Workers no están soportados en este navegador.');
+  }
+
+  // 2. Iniciar la interfaz y los datos
   updateView();
   initFirestoreListeners();
 });
