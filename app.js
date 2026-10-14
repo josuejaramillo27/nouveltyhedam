@@ -173,7 +173,7 @@ document.addEventListener('DOMContentLoaded', () => {
     logoClickCount: 0,
     logoClickTimer: null
   };
-
+let editingAnnouncementId = null;
   function saveAnnouncements() {
     localStorage.setItem(STORAGE_KEYS.ANNOUNCEMENTS, JSON.stringify(state.announcements));
   }
@@ -421,88 +421,41 @@ document.addEventListener('DOMContentLoaded', () => {
       cardsHtml += `
         <article class="novedad-card ${itemPinned ? 'pinned-card' : ''}" onclick="window.hedamApp.openModal('${item.id}')" title="Clic para ver novedad completa">
           
-          <!-- ================= VISTA ESCRITORIO (PC) ================= -->
-          <div class="desktop-card-content">
-            ${item.imageUrl ? `
-              <div class="novedad-card-image-wrap">
-                <img src="${escapeHTML(item.imageUrl)}" alt="${escapeHTML(item.title)}" class="novedad-card-img" loading="lazy" />
-              </div>
-            ` : ''}
-
-            <div class="novedad-card-body">
-              <div class="novedad-card-top">
-                <span style="font-size: 0.76rem; color: var(--text-muted); font-weight: 700; display: inline-flex; align-items: center; gap: 5px;">
-                  ${renderIcon('calendar', { size: 13, color: 'var(--text-muted)' })}
-                  <span>${itemDate}</span>
-                </span>
-
-                <div style="display: flex; align-items: center; gap: 6px;">
-                  ${itemPinned ? `
-                    <span class="badge-pinned">📌 Fijado</span>
-                  ` : isNew ? `
-                    <span class="badge-new">Nuevo</span>
-                  ` : ''}
-                </div>
-              </div>
-
-              <h3 class="novedad-card-title">${escapeHTML(item.title)}</h3>
-              <p class="novedad-card-excerpt">${cleanExcerpt}</p>
-
-              <div class="novedad-card-footer">
-                <div class="novedad-card-stats">
-                  <span title="Lecturas públicas" style="display: inline-flex; align-items: center; gap: 4px;">
-                    ${renderIcon('eye', { size: 14, color: 'var(--accent-red)' })}
-                    <span>${item.views || 0}</span>
-                  </span>
-                  <span title="Comentarios" style="display: inline-flex; align-items: center; gap: 4px;">
-                    ${renderIcon('message-square', { size: 14 })}
-                    <span>${commentsCount}</span>
-                  </span>
-                </div>
-                <div class="novedad-card-btn">
-                  <span>Ver Novedad</span>
-                  <span class="vector-icon-wrap vector-hover-slide">
-                    ${renderIcon('arrow-right', { size: 13 })}
-                  </span>
-                </div>
-              </div>
+          <div class="card-icon-box">
+            <span class="vector-icon-wrap anim-shake">
+              ${renderIcon('megaphone', { size: 22, color: 'var(--accent-red)' })}
+            </span>
+          </div>
+          
+          <div class="card-text-container">
+            <div class="card-date">
+              ${renderIcon('calendar', { size: 12, color: 'var(--text-muted)' })}
+              <span>${itemDate}</span>
+            </div>
+            <h3 class="card-title">${escapeHTML(item.title)}</h3>
+            <div class="card-compact-stats">
+               <span style="display: inline-flex; align-items: center; gap: 4px;">
+                 ${renderIcon('eye', { size: 12 })} ${item.views || 0}
+               </span>
+               <span style="display: inline-flex; align-items: center; gap: 4px;">
+                 ${renderIcon('message-square', { size: 12 })} ${commentsCount}
+               </span>
             </div>
           </div>
 
-          <!-- ================= VISTA MÓVIL (HORIZONTAL MINIMALISTA) ================= -->
-          <div class="mobile-card-content">
-            <div class="mobile-card-icon-box">
-              <span class="vector-icon-wrap anim-shake">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="var(--accent-red)" stroke="var(--accent-red)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
-              </span>
-            </div>
-            
-            <div class="mobile-card-text">
-              <div class="mobile-card-date">
-                ${renderIcon('calendar', { size: 12, color: 'var(--text-muted)' })}
-                <span>${itemDate}</span>
-              </div>
-              <h3 class="mobile-card-title">${escapeHTML(item.title)}</h3>
-            </div>
-
-            <div class="mobile-card-action">
-               <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 6px;">
-                  ${itemPinned ? `
-                    <span class="mobile-badge-solid pinned"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 3px;"><path d="m16 8-3-3"/><path d="M12 20v-8"/><path d="M5.5 13.5 9 10"/><path d="m14 4.5 3.5 3.5"/><path d="M19 13v5.5l-4-4-4 4V13c0-2-1.5-3.5-3.5-3.5H2l4-4 4 4h5.5c2 0 3.5 1.5 3.5 3.5Z"/></svg> FIJADO</span>
-                  ` : isNew ? `
-                    <span class="mobile-badge-solid new">NUEVO</span>
-                  ` : ''}
-                  
-                  <div class="mobile-action-circle">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-                  </div>
-               </div>
+          <div class="card-action-container">
+            ${itemPinned ? `
+              <span class="badge-solid pinned"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 3px;"><path d="m16 8-3-3"/><path d="M12 20v-8"/><path d="M5.5 13.5 9 10"/><path d="m14 4.5 3.5 3.5"/><path d="M19 13v5.5l-4-4-4 4V13c0-2-1.5-3.5-3.5-3.5H2l4-4 4 4h5.5c2 0 3.5 1.5 3.5 3.5Z"/></svg> FIJADO</span>
+            ` : isNew ? `
+              <span class="badge-solid new">NUEVO</span>
+            ` : ''}
+            <div class="action-circle">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
             </div>
           </div>
 
         </article>
       `;
-    });
 
     cardsHtml += '</div>';
 
@@ -962,6 +915,11 @@ document.addEventListener('DOMContentLoaded', () => {
             </td>
             <td data-label="Acciones">
               <div style="display: flex; align-items: center; gap: 10px;">
+                <!-- NUEVO BOTÓN EDITAR -->
+                <button class="action-hover-trigger" style="background: none; border: none; cursor: pointer; color: var(--accent-green); font-weight: 700; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 5px;" onclick="window.hedamApp.editAnnouncement('${a.id}')" title="Editar Novedad">
+                  <span>Editar</span>
+                </button>
+                
                 <button class="action-hover-trigger" style="background: none; border: none; cursor: pointer; color: var(--accent-red); font-weight: 700; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 5px;" onclick="window.hedamApp.openModeration('${a.id}')">
                   <span>Moderar</span>
                   <span class="vector-icon-wrap vector-hover-slide">
@@ -1014,7 +972,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Envío Formulario Crear Novedad
+  // Envío Formulario Crear/Editar Novedad
   const createAnnouncementForm = document.getElementById('admin-create-announcement-form');
   if (createAnnouncementForm) {
     createAnnouncementForm.addEventListener('submit', (e) => {
@@ -1031,34 +989,42 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const pubDate = publishedAt ? new Date(publishedAt) : new Date();
 
-      const newAnnouncement = {
-        id: 'ann_' + Date.now().toString(36) + Math.random().toString(36).substring(2, 6),
-        title,
-        content,
-        imageUrl: imageUrl || '',
-        ctaText: ctaText || 'VER OFERTA AHORA',
-        ctaUrl: ctaUrl || '',
-        publishedAt: isNaN(pubDate.getTime()) ? new Date().toISOString() : pubDate.toISOString(),
-        expiresAt: expiresAt ? new Date(expiresAt).toISOString() : '',
-        isPinned: isPinned,
-        views: 0,
-        clicks: 0,
-        status: 'published'
-      };
+      if (editingAnnouncementId) {
+        // MODO EDICIÓN
+        const itemIndex = state.announcements.findIndex(a => a.id === editingAnnouncementId);
+        if (itemIndex > -1) {
+          state.announcements[itemIndex] = {
+            ...state.announcements[itemIndex],
+            title, content, imageUrl, ctaText, ctaUrl,
+            publishedAt: isNaN(pubDate.getTime()) ? new Date().toISOString() : pubDate.toISOString(),
+            expiresAt: expiresAt ? new Date(expiresAt).toISOString() : '',
+            isPinned: isPinned
+          };
+          syncAnnouncementToFirestore(state.announcements[itemIndex]);
+          showToast('¡Novedad actualizada correctamente!', 'check');
+        }
+        editingAnnouncementId = null; // Reiniciar estado
+      } else {
+        // MODO CREACIÓN NUEVA
+        const newAnnouncement = {
+          id: 'ann_' + Date.now().toString(36) + Math.random().toString(36).substring(2, 6),
+          title, content, imageUrl: imageUrl || '', ctaText: ctaText || 'VER AHORA',
+          ctaUrl: ctaUrl || '',
+          publishedAt: isNaN(pubDate.getTime()) ? new Date().toISOString() : pubDate.toISOString(),
+          expiresAt: expiresAt ? new Date(expiresAt).toISOString() : '',
+          isPinned: isPinned, views: 0, clicks: 0, status: 'published'
+        };
+        state.announcements.unshift(newAnnouncement);
+        syncAnnouncementToFirestore(newAnnouncement);
+        // SOLO DISPARA NOTIFICACIÓN SI ES NUEVA
+        triggerNewAnnouncementNotification(title, content);
+      }
 
-      // Agregar al inicio del arreglo y seleccionar de inmediato para que aparezca en tiempo real en la vista de usuario
-      state.announcements.unshift(newAnnouncement);
-      state.selectedAnnouncementId = newAnnouncement.id;
       saveAnnouncements();
-      syncAnnouncementToFirestore(newAnnouncement);
-
       createAnnouncementForm.reset();
       createFormCard.classList.add('view-hidden');
       renderAdminDashboard();
       renderClientView();
-
-      // Disparar Notificación Push automática a toda la comunidad vía Firebase
-      triggerNewAnnouncementNotification(title, content);
     });
   }
 
@@ -1181,6 +1147,42 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ================= API GLOBAL PARA HANDLERS HTML =================
   window.hedamApp = {
+    // --- NUEVA FUNCIÓN: EDITAR NOVEDAD ---
+    editAnnouncement: (id) => {
+      const item = state.announcements.find(a => a.id === id);
+      if (!item) return;
+      
+      editingAnnouncementId = id; // Activamos el modo edición
+      
+      // Llenamos el formulario con los datos existentes
+      document.getElementById('form-title').value = item.title || '';
+      document.getElementById('form-content').value = item.content || '';
+      document.getElementById('form-image').value = item.imageUrl || '';
+      document.getElementById('form-cta-text').value = item.ctaText || '';
+      document.getElementById('form-cta-url').value = item.ctaUrl || '';
+      
+      if (item.publishedAt) {
+        const d = new Date(item.publishedAt);
+        document.getElementById('form-published-at').value = getLocalDateTimeString(d);
+      }
+      if (item.expiresAt) {
+        const d = new Date(item.expiresAt);
+        document.getElementById('form-expires-at').value = getLocalDateTimeString(d);
+      }
+      
+      const pinCheckbox = document.getElementById('form-is-pinned');
+      if (pinCheckbox) pinCheckbox.checked = item.isPinned === true;
+
+      // Abrimos el formulario y hacemos auto-scroll
+      const formCard = document.getElementById('admin-create-form-card');
+      if (formCard) {
+        formCard.classList.remove('view-hidden');
+        setTimeout(() => {
+          formCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          document.getElementById('form-title').focus();
+        }, 150);
+      }
+    },
     // Abrir en Modal Glassmorphism
     openModal: (id) => {
       const item = state.announcements.find(a => a.id === id);
