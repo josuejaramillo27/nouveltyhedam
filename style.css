@@ -1816,7 +1816,46 @@ body.modal-open {
   .card-title {
     font-size: 1rem;
   }
+/* ================= FIX: FORMULARIO ADMIN EN MÓVILES ================= */
+  #admin-create-form-card {
+    padding: 20px 16px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    overflow: hidden; /* Evita que cualquier elemento interno desborde la tarjeta */
+  }
 
+  /* Asegurar que las cajas de texto y de fecha jamás superen la pantalla */
+  #admin-create-announcement-form .input-field {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Forzar que las columnas principales y la cuadrícula de fechas sean de 1 sola columna */
+  #admin-create-announcement-form div[style*="display: grid"] {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+
+  /* Permitir que los textos largos (como el título de Vista Previa) bajen de línea automáticamente */
+  #admin-create-form-card div[style*="display: flex"] {
+    flex-wrap: wrap !important;
+  }
+
+  /* Adaptar los botones de íconos animados para que sean grandes y fáciles de tocar en celular */
+  .btn-tag-helper {
+    flex: 1 1 100%;
+    justify-content: center;
+    padding: 10px 8px;
+    margin-bottom: 2px;
+  }
+
+  /* Ajustar el título principal del formulario para que no se salga */
+  #admin-create-form-card h3 {
+    font-size: 1.15rem !important;
+    align-items: flex-start !important;
+    line-height: 1.35 !important;
+  }
 }
 
   /* ================= REDISEÑO DE TARJETAS NOVEDADES (CELULAR) ================= */
