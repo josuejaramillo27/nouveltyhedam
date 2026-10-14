@@ -666,8 +666,9 @@ let editingAnnouncementId = null;
         modalCommentsDrawer.classList.remove('view-hidden');
         updateModalCommentsToggleBtn(true);
         
-        // --- CÓDIGO NUEVO PARA HACER SCROLL AUTOMÁTICO ---
+        // --- CÓDIGO NUEVO PARA HACER SCROLL AUTOMÁTICO AL CHAT LIVE ---
         setTimeout(() => {
+          // 1. Baja el modal general para ver la caja de comentarios
           const scrollContainer = document.querySelector('.modal-body-scrollable');
           if (scrollContainer) {
             scrollContainer.scrollTo({ 
@@ -675,8 +676,12 @@ let editingAnnouncementId = null;
               behavior: 'smooth' 
             });
           }
-        }, 50); // Un pequeño retraso para asegurar que el drawer ya es visible
-        // --------------------------------------------------
+          // 2. Baja el hilo de comentarios interno hasta el último mensaje (TikTok style)
+          if (modalCommentsList) {
+            modalCommentsList.style.scrollBehavior = 'smooth';
+            modalCommentsList.scrollTop = modalCommentsList.scrollHeight;
+          }
+        }, 50);
 
       } else {
         modalCommentsDrawer.classList.add('view-hidden');
@@ -684,7 +689,6 @@ let editingAnnouncementId = null;
       }
     });
   }
-
   function updateModalCommentFormInputs() {
     const container = document.getElementById('modal-comment-fields-container');
     if (!container) return;
@@ -754,6 +758,14 @@ let editingAnnouncementId = null;
         </div>`;
     });
     modalCommentsList.innerHTML = html;
+
+    // --- SCROLL TIKTOK: Siempre anclar la vista al último mensaje al recibir/enviar ---
+    setTimeout(() => {
+      if (modalCommentsList) {
+        modalCommentsList.style.scrollBehavior = 'smooth';
+        modalCommentsList.scrollTop = modalCommentsList.scrollHeight;
+      }
+    }, 10);
   }
 
   function submitComment(announcementId, author, content) {
@@ -1108,6 +1120,13 @@ let editingAnnouncementId = null;
         </div>`;
     });
     moderationCommentsList.innerHTML = html;
+    // --- SCROLL TIKTOK ADMIN: Mantener el chat al fondo ---
+    setTimeout(() => {
+      if (moderationCommentsList) {
+        moderationCommentsList.style.scrollBehavior = 'smooth';
+        moderationCommentsList.scrollTop = moderationCommentsList.scrollHeight;
+      }
+    }, 10);
   }
 
   if (closeModerationBtn) {
