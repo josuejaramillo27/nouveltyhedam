@@ -834,7 +834,7 @@ body.modal-open {
   border-bottom: 1px solid var(--border-color);
 }
 
-/* ================= DISEÑO DE NOVEDADES: GRID 3 POR FILA EN PC Y VERTICAL EN MÓVIL ================= */
+/* ================= DISEÑO UNIFICADO DE NOVEDADES (PC y MÓVIL) ================= */
 .client-layout-container {
   width: 100%;
   box-sizing: border-box;
@@ -843,149 +843,150 @@ body.modal-open {
 .novedades-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 24px;
+  gap: 20px;
   width: 100%;
-  box-sizing: border-box;
 }
 
 @media (max-width: 1040px) {
   .novedades-grid {
     grid-template-columns: repeat(2, 1fr);
-    gap: 20px;
   }
 }
 
-@media (max-width: 680px) {
+@media (max-width: 768px) {
   .novedades-grid {
+    grid-template-columns: 1fr;
     display: flex;
     flex-direction: column;
-    gap: 16px;
   }
 }
 
+/* Tarjeta Principal Horizontal */
 .novedad-card {
-  background: var(--bg-card);
-  border: 1.5px solid var(--border-color);
-  border-radius: 22px;
   display: flex;
-  flex-direction: column;
-  overflow: hidden;
+  flex-direction: row;
+  align-items: center;
+  padding: 16px;
+  gap: 16px;
+  background: #0b0c10;
+  border: 1px solid #1a1c23;
+  border-radius: 18px;
   cursor: pointer;
   transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: var(--card-shadow);
-  position: relative;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
 }
 
 .novedad-card:hover {
-  transform: translateY(-5px);
-  border-color: rgba(255, 30, 39, 0.7);
-  box-shadow: 0 16px 38px rgba(0, 0, 0, 0.4), 0 0 25px rgba(255, 30, 39, 0.25);
-  background: var(--bg-card-hover);
+  background: #11131a;
+  border-color: rgba(255, 30, 39, 0.5);
+  transform: translateY(-3px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3), 0 0 15px rgba(255, 30, 39, 0.15);
 }
 
 .novedad-card.pinned-card {
-  border-color: rgba(255, 30, 39, 0.45);
-  background: linear-gradient(180deg, rgba(255, 30, 39, 0.04) 0%, var(--bg-card) 100%);
+  border-color: rgba(255, 30, 39, 0.3);
+  background: linear-gradient(180deg, rgba(255, 30, 39, 0.05) 0%, #0b0c10 100%);
 }
 
-.novedad-card-image-wrap {
-  width: 100%;
-  height: 190px;
-  overflow: hidden;
-  position: relative;
-  background: #000000;
+/* Contenedor del Megáfono Animado */
+.card-icon-box {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  background: rgba(255, 30, 39, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
-.novedad-card-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.novedad-card:hover .novedad-card-img {
-  transform: scale(1.05);
-}
-
-.novedad-card-body {
-  padding: 22px 22px 18px;
+/* Sección Central de Texto (Expandible) */
+.card-text-container {
+  flex: 1; /* Esto hace que ocupe todo el espacio disponible */
   display: flex;
   flex-direction: column;
-  flex: 1;
-}
-
-.novedad-card-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  margin-bottom: 12px;
-  flex-wrap: wrap;
-}
-
-.novedad-card-title {
-  font-size: 1.15rem;
-  font-weight: 900;
-  color: var(--text-main);
-  line-height: 1.35;
-  margin: 0 0 10px 0;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
+  justify-content: center;
+  gap: 3px;
   overflow: hidden;
-  text-transform: uppercase;
+  min-width: 0; /* Vital para que el texto largo se corte con puntos suspensivos (...) */
 }
 
-.novedad-card-excerpt {
-  font-size: 0.88rem;
-  color: var(--text-muted);
-  line-height: 1.5;
-  margin: 0 0 18px 0;
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  flex: 1;
-}
-
-.novedad-card-footer {
+.card-date {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  border-top: 1px solid var(--border-color);
-  padding-top: 14px;
-  margin-top: auto;
-  gap: 10px;
-}
-
-.novedad-card-stats {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-size: 0.78rem;
+  gap: 6px;
+  font-size: 0.75rem;
   color: var(--text-muted);
   font-weight: 600;
 }
 
-.novedad-card-btn {
-  background: rgba(255, 30, 39, 0.1);
-  border: 1px solid rgba(255, 30, 39, 0.35);
-  color: var(--accent-red);
-  padding: 6px 14px;
-  border-radius: 9999px;
-  font-size: 0.78rem;
+.card-title {
+  font-size: 1.1rem;
   font-weight: 800;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  transition: all 0.2s ease;
+  color: var(--text-main);
+  line-height: 1.25;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis; /* Esto hace que el título se corte si es muy largo */
+  text-transform: uppercase;
 }
 
-.novedad-card:hover .novedad-card-btn {
+/* Estadísticas pequeñas debajo del título */
+.card-compact-stats {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.72rem;
+  color: #64748b;
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+/* Lado Derecho: Etiquetas y Flecha */
+.card-action-container {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.badge-solid {
   background: var(--accent-red);
   color: #ffffff;
-  border-color: var(--accent-red);
-  box-shadow: 0 2px 10px var(--accent-red-glow);
+  font-size: 0.68rem;
+  font-weight: 900;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  letter-spacing: 0.5px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.badge-solid.pinned {
+  background: rgba(255, 30, 39, 0.15);
+  color: var(--accent-red);
+  border: 1px solid rgba(255, 30, 39, 0.4);
+}
+
+.action-circle {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(255, 30, 39, 0.08);
+  color: var(--accent-red);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 30, 39, 0.25);
+  transition: all 0.2s;
+}
+
+.novedad-card:hover .action-circle {
+  background: var(--accent-red);
+  color: white;
+  transform: translateX(3px);
 }
 
 /* Badges */
@@ -1799,6 +1800,24 @@ body.modal-open {
     font-size: 0.82rem;
     padding: 10px 16px;
   }
+  .card-action-container {
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+  }
+  .action-circle {
+    width: 28px;
+    height: 28px;
+  }
+  .card-icon-box {
+    width: 46px;
+    height: 46px;
+  }
+  .card-title {
+    font-size: 1rem;
+  }
+
+}
 
   /* ================= REDISEÑO DE TARJETAS NOVEDADES (CELULAR) ================= */
   
