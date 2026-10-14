@@ -456,7 +456,7 @@ let editingAnnouncementId = null;
 
         </article>
       `;
-
+      });
     cardsHtml += '</div>';
 
     feedContainer.innerHTML = cardsHtml;
