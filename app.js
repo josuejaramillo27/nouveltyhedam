@@ -2145,7 +2145,6 @@ let editingAnnouncementId = null;
         }
       });
     } catch (e) {}
-  }
 
   // Exponer helper al objeto de la ventana
   window.hedamTriggerNotification = triggerNewAnnouncementNotification;
