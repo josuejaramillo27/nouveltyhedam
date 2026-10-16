@@ -1861,39 +1861,177 @@ body.modal-open {
   filter: brightness(1.08);
 }
 
-/* ================= FASE 2: CHAT GLOBAL (UI/UX) ================= */
-/* Botón Neón Cliente */
+/* ================= FASE 2: CHAT GLOBAL (UI/UX POTENCIADO) ================= */
+
+/* Botón Base */
 .btn-neon-chat {
+  position: relative;
   display: flex;
   align-items: center;
-  background: #090314;
-  border: 1.5px solid #a855f7;
   border-radius: 9999px;
-  padding: 10px 14px;
+  padding: 8px 12px;
   width: 100%;
-  max-width: 680px;
-  box-shadow: 0 0 15px rgba(168, 85, 247, 0.3), inset 0 0 10px rgba(168, 85, 247, 0.15);
-  color: white;
+  max-width: 600px;
   gap: 16px;
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   cursor: pointer;
   text-decoration: none;
 }
-.btn-neon-chat:hover {
-  box-shadow: 0 0 25px rgba(168, 85, 247, 0.5), inset 0 0 15px rgba(168, 85, 247, 0.3);
-  transform: translateY(-2px);
-  border-color: #c084fc;
+
+/* Estado: APAGADO (Gris y Opaco) */
+.btn-neon-chat.chat-offline {
+  background: #0f111a;
+  border: 1.5px solid #2a2e3d;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
 }
-.neon-icon-circle {
-  width: 50px; height: 50px;
-  border-radius: 50%;
-  background: radial-gradient(circle, #a855f7 0%, #581c87 100%);
-  display: flex; align-items: center; justify-content: center;
-  border: 2px solid #c084fc;
+.btn-neon-chat.chat-offline .neon-icon-circle {
+  background: #1a1d26;
+  border-color: #3b4255;
+  box-shadow: none;
+}
+.btn-neon-chat.chat-offline .neon-arrow-circle {
+  background: #2a2e3d;
+  box-shadow: none;
+}
+.btn-neon-chat.chat-offline h3 {
+  color: #64748b;
+  text-shadow: none;
+}
+
+/* Estado: EN VIVO (Brillante 3D) */
+.btn-neon-chat.chat-live {
+  background: #0a0216;
+  border: 1.5px solid #c084fc;
+  box-shadow: 0 0 25px rgba(168, 85, 247, 0.4), inset 0 0 15px rgba(168, 85, 247, 0.2);
+}
+.btn-neon-chat.chat-live:hover {
+  transform: translateY(-2px) scale(1.01);
+  box-shadow: 0 0 35px rgba(168, 85, 247, 0.6), inset 0 0 20px rgba(168, 85, 247, 0.3);
+  border-color: #d8b4fe;
+}
+.btn-neon-chat.chat-live .neon-icon-circle {
+  background: radial-gradient(circle at top left, #d8b4fe 0%, #9333ea 100%);
+  border-color: #e9d5ff;
+  box-shadow: 0 0 20px #a855f7;
+}
+.btn-neon-chat.chat-live .neon-arrow-circle {
+  background: radial-gradient(circle at top left, #c084fc 0%, #7e22ce 100%);
   box-shadow: 0 0 15px #a855f7;
+}
+.btn-neon-chat.chat-live h3 {
+  color: #ffffff;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+}
+
+/* Elementos Internos del Botón */
+.neon-icon-circle {
+  width: 54px; height: 54px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  border: 2px solid transparent;
   position: relative;
   flex-shrink: 0;
+  transition: all 0.4s ease;
 }
+
+.chat-status-dot {
+  position: absolute; 
+  bottom: 0px; 
+  right: 2px; 
+  width: 14px; 
+  height: 14px; 
+  border-radius: 50%; 
+  border: 3px solid #090314;
+  transition: background 0.4s ease;
+}
+.chat-status-dot.offline { background: #64748b; }
+.chat-status-dot.live { background: #22c55e; box-shadow: 0 0 8px #22c55e; }
+
+.neon-text-container {
+  flex: 1; 
+  display: flex; 
+  flex-direction: column; 
+  align-items: center; 
+  justify-content: center;
+}
+
+.neon-text-container h3 {
+  font-size: 1.45rem; 
+  font-weight: 900; 
+  margin: 0; 
+  line-height: 1; 
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  transition: all 0.4s ease;
+}
+
+/* Subtítulo del botón */
+.neon-subtext {
+  font-size: 0.82rem;
+  margin: 2px 0 0 0;
+  font-weight: 500;
+  transition: all 0.4s ease;
+}
+
+/* Color cuando está APAGADO */
+.btn-neon-chat.chat-offline .neon-subtext {
+  color: #475569;
+}
+
+/* Color cuando está EN VIVO */
+.btn-neon-chat.chat-live .neon-subtext {
+  color: #e9d5ff;
+}
+
+@media (max-width: 640px) {
+  .neon-subtext {
+    font-size: 0.7rem;
+  }
+}
+
+.neon-arrow-circle {
+  width: 42px; height: 42px; 
+  border-radius: 50%; 
+  display: flex; align-items: center; justify-content: center; 
+  flex-shrink: 0;
+  transition: all 0.4s ease;
+}
+
+/* Etiqueta Flotante EN VIVO */
+.chat-floating-badge {
+  position: absolute;
+  top: -12px;
+  left: 20px;
+  display: inline-flex; 
+  align-items: center; 
+  gap: 4px; 
+  background: #090314; 
+  border: 1.5px solid #c084fc; 
+  padding: 4px 10px; 
+  border-radius: 12px; 
+  font-size: 0.7rem; 
+  font-weight: 900; 
+  color: #e9d5ff; 
+  letter-spacing: 0.8px;
+  box-shadow: 0 4px 10px rgba(168, 85, 247, 0.4);
+  z-index: 10;
+  animation: floatBadge 3s ease-in-out infinite;
+}
+
+@keyframes floatBadge {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+
+@media (max-width: 640px) {
+  .btn-neon-chat { padding: 6px 10px; gap: 10px; }
+  .neon-icon-circle { width: 44px; height: 44px; }
+  .neon-arrow-circle { width: 36px; height: 36px; }
+  .neon-text-container h3 { font-size: 1.15rem; }
+  .chat-floating-badge { top: -10px; left: 15px; font-size: 0.65rem; padding: 3px 8px; }
+}
+
+/* ... (AQUÍ DEBAJO DEJAS EL RESTO DE TU CSS DEL CHAT, COMO .chat-live-modal, etc.) ... */
 
 /* Modal Chat Live (Estilo TikTok / Rojo Oscuro) */
 .chat-live-modal {
