@@ -174,10 +174,12 @@ document.addEventListener('DOMContentLoaded', () => {
     logoClickCount: 0,
     logoClickTimer: null,
   banner: loadJSON(STORAGE_KEYS.BANNER, {
-      active: false,
-      imageUrl: '',
-      linkUrl: '',
-      btnText: 'VER MÁS AQUÍ'
+      active: false, imageUrl: '', linkUrl: '', btnText: 'VER MÁS AQUÍ'
+    }),
+    // NUEVO: Estado del Chat Global
+    chatGlobalStatus: loadJSON('hedam_chat_status', {
+      isLive: false,
+      fakeViewers: 1248
     })
   };
 let editingAnnouncementId = null;
@@ -1147,6 +1149,88 @@ let editingAnnouncementId = null;
     });
   }
 
+  // ================= FASE 2: CONTROLES DEL CHAT GLOBAL (ADMIN) =================
+  const toggleChatBtn = document.getElementById('admin-toggle-chat-btn');
+  const fakeViewersInput = document.getElementById('admin-fake-viewers');
+  const chatStatusBadge = document.getElementById('admin-chat-status-badge');
+
+  function updateAdminChatUI() {
+    if (!toggleChatBtn || !chatStatusBadge || !fakeViewersInput) return;
+    
+    fakeViewersInput.value = state.chatGlobalStatus.fakeViewers;
+    
+    if (state.chatGlobalStatus.isLive) {
+      chatStatusBadge.textContent = 'EN VIVO';
+      chatStatusBadge.style.background = 'rgba(22, 201, 70, 0.2)';
+      chatStatusBadge.style.color = '#16c946';
+      toggleChatBtn.textContent = 'Apagar Chat Global';
+      toggleChatBtn.style.background = 'linear-gradient(135deg, #ef4444, #b91c1c)';
+    } else {
+      chatStatusBadge.textContent = 'APAGADO';
+      chatStatusBadge.style.background = 'rgba(255,255,255,0.1)';
+      chatStatusBadge.style.color = 'var(--text-muted)';
+      toggleChatBtn.textContent = 'Encender Chat Global';
+      toggleChatBtn.style.background = 'linear-gradient(135deg, #a855f7, #7e22ce)';
+    }
+
+    // Actualizar también el contador en el chat del cliente si está abierto
+    const clientViewers = document.getElementById('chat-live-viewers');
+    if (clientViewers) clientViewers.textContent = parseInt(state.chatGlobalStatus.fakeViewers).toLocaleString();
+  }
+
+  // Escuchar botón de encendido/apagado
+  if (toggleChatBtn) {
+    toggleChatBtn.addEventListener('click', () => {
+      state.chatGlobalStatus.isLive = !state.chatGlobalStatus.isLive;
+      localStorage.setItem('hedam_chat_status', JSON.stringify(state.chatGlobalStatus));
+      
+      // Guardar en Firebase
+      if (firestoreDb) {
+        firestoreDb.collection('settings').doc('global_chat').set(state.chatGlobalStatus, { merge: true });
+      }
+      
+      updateAdminChatUI();
+      showToast(state.chatGlobalStatus.isLive ? 'Chat Encendido' : 'Chat Apagado', 'check');
+    });
+  }
+
+  // Escuchar cambio en el número de espectadores
+  if (fakeViewersInput) {
+    fakeViewersInput.addEventListener('change', (e) => {
+      state.chatGlobalStatus.fakeViewers = parseInt(e.target.value) || 0;
+      localStorage.setItem('hedam_chat_status', JSON.stringify(state.chatGlobalStatus));
+      
+      if (firestoreDb) {
+        firestoreDb.collection('settings').doc('global_chat').set({ fakeViewers: state.chatGlobalStatus.fakeViewers }, { merge: true });
+      }
+      updateAdminChatUI();
+    });
+  }
+
+  // Escuchar cambios desde Firebase (para que los clientes sepan si se prendió)
+  try {
+    firestoreDb.collection('settings').doc('global_chat').onSnapshot((doc) => {
+      if (doc.exists) {
+        state.chatGlobalStatus = doc.data();
+        localStorage.setItem('hedam_chat_status', JSON.stringify(state.chatGlobalStatus));
+        if (state.isAuthenticated) updateAdminChatUI();
+        
+        // Si lo apagan mientras un cliente lo tiene abierto, cerrárselo en la cara amablemente
+        if (!state.chatGlobalStatus.isLive) {
+           window.hedamApp.closeGlobalChat();
+        } else {
+           const clientViewers = document.getElementById('chat-live-viewers');
+           if (clientViewers) clientViewers.textContent = parseInt(state.chatGlobalStatus.fakeViewers).toLocaleString();
+        }
+      }
+    });
+  } catch (e) {}
+
+  // Inicializar UI Admin si es admin
+  if (state.isAuthenticated) {
+    setTimeout(updateAdminChatUI, 500);
+  }
+  
   // ================= MODERACIÓN DE CHAT EN ADMIN =================
   const moderationDrawer = document.getElementById('admin-chat-moderation-drawer');
   const moderationTitle = document.getElementById('moderation-announcement-title');
@@ -1296,8 +1380,21 @@ let editingAnnouncementId = null;
       const item = state.announcements.find(a => a.id === id);
       if (item) openAnnouncementModal(item);
     },
+    
     // ================= FASE 2: ABRIR/CERRAR CHAT GLOBAL =================
     openGlobalChat: () => {
+      if (!state.chatGlobalStatus.isLive) {
+        // Está apagado, mostrar modal de aviso
+        const closedModal = document.getElementById('chat-closed-modal');
+        if (closedModal) {
+          closedModal.classList.remove('view-hidden');
+          document.documentElement.classList.add('modal-open');
+          document.body.classList.add('modal-open');
+        }
+        return;
+      }
+
+      // Está encendido, abrir chat real
       const modal = document.getElementById('global-chat-modal');
       if (modal) {
         modal.classList.remove('view-hidden');
@@ -1307,6 +1404,14 @@ let editingAnnouncementId = null;
     },
     closeGlobalChat: () => {
       const modal = document.getElementById('global-chat-modal');
+      if (modal) {
+        modal.classList.add('view-hidden');
+        document.documentElement.classList.remove('modal-open');
+        document.body.classList.remove('modal-open');
+      }
+    },
+    closeChatClosedModal: () => {
+      const modal = document.getElementById('chat-closed-modal');
       if (modal) {
         modal.classList.add('view-hidden');
         document.documentElement.classList.remove('modal-open');
