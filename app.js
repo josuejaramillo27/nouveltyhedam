@@ -1296,6 +1296,23 @@ let editingAnnouncementId = null;
       const item = state.announcements.find(a => a.id === id);
       if (item) openAnnouncementModal(item);
     },
+    // ================= FASE 2: ABRIR/CERRAR CHAT GLOBAL =================
+    openGlobalChat: () => {
+      const modal = document.getElementById('global-chat-modal');
+      if (modal) {
+        modal.classList.remove('view-hidden');
+        document.documentElement.classList.add('modal-open');
+        document.body.classList.add('modal-open');
+      }
+    },
+    closeGlobalChat: () => {
+      const modal = document.getElementById('global-chat-modal');
+      if (modal) {
+        modal.classList.add('view-hidden');
+        document.documentElement.classList.remove('modal-open');
+        document.body.classList.remove('modal-open');
+      }
+    },
     // Seleccionar anuncio en el lateral izquierdo (Requisito 5)
     selectAnnouncement: (id) => {
       state.selectedAnnouncementId = id;
