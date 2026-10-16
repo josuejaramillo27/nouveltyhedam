@@ -131,7 +131,8 @@ document.addEventListener('DOMContentLoaded', () => {
     POPUP_LAST_ANNOUNCEMENT_ID: 'hedam_popup_last_announcement_id',
     NOTIF_MODAL_SEEN: 'hedam_notif_modal_seen',
     USER_NICKNAME: 'hedam_user_nickname',
-    USER_NICKNAME_DATE: 'hedam_user_nickname_date'
+    USER_NICKNAME_DATE: 'hedam_user_nickname_date',
+    BANNER: 'hedam_promo_banner'
   };
 
   // Novedades iniciales por defecto (vacío para que el administrador publique solo contenido oficial)
@@ -171,7 +172,13 @@ document.addEventListener('DOMContentLoaded', () => {
     showCommentsDrawer: false,
     hasAutoShownModal: false,
     logoClickCount: 0,
-    logoClickTimer: null
+    logoClickTimer: null,
+  banner: loadJSON(STORAGE_KEYS.BANNER, {
+      active: false,
+      imageUrl: '',
+      linkUrl: '',
+      btnText: 'VER MÁS AQUÍ'
+    })
   };
 let editingAnnouncementId = null;
   function saveAnnouncements() {
@@ -376,8 +383,36 @@ let editingAnnouncementId = null;
     });
   }
 
+  // Renderizar Banner Promocional Superior (Fase 1)
+  function renderPromoBanner() {
+    const container = document.getElementById('promo-banner-container');
+    if (!container) return;
+
+    if (!state.banner || !state.banner.active || !state.banner.imageUrl) {
+      container.classList.add('view-hidden');
+      container.innerHTML = '';
+      return;
+    }
+
+    const link = state.banner.linkUrl || '#';
+    const btnText = state.banner.btnText || 'VER MÁS AQUÍ';
+
+    container.classList.remove('view-hidden');
+    container.innerHTML = `
+      <a href="${escapeHTML(link)}" target="_blank" rel="noopener noreferrer" class="promo-banner-card" title="${escapeHTML(btnText)}">
+        <img src="${escapeHTML(state.banner.imageUrl)}" alt="Promoción HedamPro" class="promo-banner-img" />
+        <span class="promo-banner-btn">
+          ${renderIcon('link', { size: 12, strokeWidth: 2.5, color: '#090a0f' })}
+          <span>${escapeHTML(btnText)}</span>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#090a0f" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+        </span>
+      </a>
+    `;
+  }
+  
   // Requisito 5: Todos los anuncios en un lateral izquierdo scrollable y resto de pantalla con el anuncio completo
   function renderClientView() {
+    renderPromoBanner();
     const feedContainer = document.getElementById('news-feed-container');
     const openPopupBtnContainer = document.getElementById('open-popup-btn-container');
     const activeList = getActiveAnnouncements();
@@ -1040,6 +1075,60 @@ let editingAnnouncementId = null;
     });
   }
 
+// ================= FASE 1: GESTIÓN DEL BANNER EN ADMIN =================
+  const toggleBannerFormBtn = document.getElementById('toggle-banner-form-btn');
+  const bannerFormCard = document.getElementById('admin-banner-form-card');
+  const bannerFormCancelBtn = document.getElementById('banner-form-cancel-btn');
+  const adminBannerForm = document.getElementById('admin-banner-form');
+
+  if (toggleBannerFormBtn && bannerFormCard) {
+    toggleBannerFormBtn.addEventListener('click', () => {
+      bannerFormCard.classList.toggle('view-hidden');
+      if (!bannerFormCard.classList.contains('view-hidden')) {
+        document.getElementById('banner-image-url').value = state.banner?.imageUrl || '';
+        document.getElementById('banner-link-url').value = state.banner?.linkUrl || '';
+        document.getElementById('banner-btn-text').value = state.banner?.btnText || 'VER MÁS AQUÍ';
+        document.getElementById('banner-is-active').checked = state.banner?.active !== false;
+
+        setTimeout(() => {
+          bannerFormCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          document.getElementById('banner-image-url').focus();
+        }, 150);
+      }
+    });
+  }
+
+  if (bannerFormCancelBtn && bannerFormCard) {
+    bannerFormCancelBtn.addEventListener('click', () => {
+      bannerFormCard.classList.add('view-hidden');
+    });
+  }
+
+  if (adminBannerForm) {
+    adminBannerForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const newBanner = {
+        imageUrl: document.getElementById('banner-image-url').value.trim(),
+        linkUrl: document.getElementById('banner-link-url').value.trim(),
+        btnText: document.getElementById('banner-btn-text').value.trim() || 'VER MÁS AQUÍ',
+        active: document.getElementById('banner-is-active').checked,
+        updatedAt: new Date().toISOString()
+      };
+
+      state.banner = newBanner;
+      localStorage.setItem(STORAGE_KEYS.BANNER, JSON.stringify(newBanner));
+
+      if (firestoreDb) {
+        firestoreDb.collection('settings').doc('promo_banner').set(newBanner, { merge: true })
+          .catch(err => console.warn('[Firestore] Error guardando banner:', err.message));
+      }
+
+      if (bannerFormCard) bannerFormCard.classList.add('view-hidden');
+      renderPromoBanner();
+      showToast('¡Banner promocional actualizado!', 'sparkles');
+    });
+  }
+  
   // Reiniciar métricas a cero
   const resetMetricsBtn = document.getElementById('reset-metrics-btn');
   if (resetMetricsBtn) {
@@ -2046,6 +2135,13 @@ let editingAnnouncementId = null;
           if (state.activeModalAnnouncement) renderModalComments();
           if (state.selectedModerationId) renderModerationDrawer();
           if (state.isAuthenticated) renderAdminDashboard();
+          // Escuchar cambios en vivo del Banner Promocional
+    try {
+      firestoreDb.collection('settings').doc('promo_banner').onSnapshot((doc) => {
+        if (doc.exists) {
+          state.banner = doc.data();
+          localStorage.setItem(STORAGE_KEYS.BANNER, JSON.stringify(state.banner));
+          renderPromoBanner();
         }
       });
     } catch (e) {}
