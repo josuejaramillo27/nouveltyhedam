@@ -143,6 +143,27 @@
           </div>
         </div>
 
+        <!-- ================= FASE 2: BOTÓN NEÓN CHAT GLOBAL ================= -->
+          <div id="client-chat-trigger-container" style="width: 100%; display: flex; justify-content: center; margin-bottom: 24px;">
+             <button onclick="window.hedamApp.openGlobalChat()" class="btn-neon-chat">
+                <div class="neon-icon-circle">
+                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                   <span style="position: absolute; bottom: 0; right: 0; width: 14px; height: 14px; background: #22c55e; border-radius: 50%; border: 3px solid #090314;"></span>
+                </div>
+                <div style="flex: 1; text-align: left;">
+                   <div style="display: inline-flex; align-items: center; gap: 4px; background: rgba(168,85,247,0.2); border: 1px solid rgba(168,85,247,0.5); padding: 2px 8px; border-radius: 10px; font-size: 0.65rem; font-weight: 900; color: #d8b4fe; margin-bottom: 3px; letter-spacing: 0.5px;">
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="2"/><path d="M8.5 15.5A5 5 0 0 1 8.5 8.5"/><path d="M15.5 15.5a5 5 0 0 0 0-7"/><path d="M5 19a10 10 0 0 1 0-14"/><path d="M19 19a10 10 0 0 0 0-14"/></svg>
+                      EN VIVO
+                   </div>
+                   <h3 style="font-size: 1.35rem; font-weight: 900; margin: 0; line-height: 1.1; text-transform: uppercase;">Únete al Chat Global</h3>
+                   <p style="font-size: 0.78rem; color: #a8b2c1; margin: 0;">Mensajes en tiempo real de la comunidad</p>
+                </div>
+                <div style="width: 38px; height: 38px; border-radius: 50%; background: #a855f7; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 0 12px #a855f7;">
+                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                </div>
+             </button>
+          </div>
+        
         <!-- Layout Dividido: Lateral Izquierdo + Lector Principal -->
         <div class="client-layout-container" id="news-feed-container">
           <!-- Inyectado dinámicamente por app.js -->
@@ -486,6 +507,35 @@
               </button>
             </div>
           </form>
+        </div>
+
+        <!-- ================= FASE 2: PANEL DE CONTROL CHAT GLOBAL ================= -->
+        <div class="card mb-4" style="border: 1.5px solid #a855f7; box-shadow: 0 4px 20px rgba(168, 85, 247, 0.15);">
+          <h3 style="font-size: 1.25rem; font-weight: 800; margin-bottom: 16px; color: #c084fc; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+              <span>Control Maestro: Chat Global</span>
+            </div>
+            <span id="admin-chat-status-badge" style="background: rgba(255,255,255,0.1); color: var(--text-muted); font-size: 0.75rem; padding: 4px 10px; border-radius: 20px; font-weight: 900; letter-spacing: 0.5px;">APAGADO</span>
+          </h3>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; align-items: end;">
+             <div>
+                <label style="display: block; font-weight: 700; font-size: 0.85rem; margin-bottom: 6px;">Estado del Evento</label>
+                <button id="admin-toggle-chat-btn" class="btn-primary" style="width: 100%; background: linear-gradient(135deg, #a855f7, #7e22ce); box-shadow: 0 4px 15px rgba(168,85,247,0.4);">
+                  Encender Chat Global
+                </button>
+             </div>
+             <div>
+                <label style="display: block; font-weight: 700; font-size: 0.85rem; margin-bottom: 6px;">Espectadores (Fakes + Reales)</label>
+                <input id="admin-fake-viewers" type="number" value="1248" class="input-field" style="margin-bottom: 0; border-color: #a855f7;" />
+             </div>
+             <div>
+                <label style="display: block; font-weight: 700; font-size: 0.85rem; margin-bottom: 6px;">Notificación Masiva</label>
+                <button id="admin-notify-chat-btn" class="btn-outline" style="width: 100%; border-color: #a855f7; color: #d8b4fe;">
+                  Enviar Alerta Push
+                </button>
+             </div>
+          </div>
         </div>
         
         <!-- Formulario Crear Novedad -->
@@ -855,6 +905,92 @@
     </div>
   </div>
 
+  <!-- ================= FASE 2: MODAL CHAT GLOBAL EN VIVO ================= -->
+  <div id="global-chat-modal" class="modal-overlay view-hidden" style="z-index: 2000; padding: 20px 10px;">
+    <div class="chat-live-modal" onclick="event.stopPropagation()">
+      
+      <!-- Cabecera del Chat -->
+      <div style="padding: 16px; border-bottom: 1px solid rgba(255,30,39,0.2); display: flex; align-items: center; justify-content: space-between; background: rgba(255,30,39,0.03);">
+         <div style="display: flex; align-items: center; gap: 10px;">
+            <div style="width: 42px; height: 42px; border-radius: 50%; background: var(--accent-red); display: flex; align-items: center; justify-content: center; box-shadow: 0 0 15px var(--accent-red-glow);">
+               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            </div>
+            <div>
+               <h3 style="font-size: 1.15rem; font-weight: 900; margin: 0; display: flex; align-items: center; gap: 6px;">
+                 CHAT GLOBAL
+                 <span style="background: var(--accent-red); color: white; padding: 2px 6px; border-radius: 6px; font-size: 0.6rem; font-weight: 900; letter-spacing: 0.5px;">🔴 EN VIVO</span>
+               </h3>
+               <p style="font-size: 0.75rem; color: var(--text-muted); margin: 0;">Mensajes en tiempo real de la comunidad</p>
+            </div>
+         </div>
+         <div style="display: flex; align-items: center; gap: 14px;">
+            <div style="text-align: right;">
+               <div style="display: flex; align-items: center; justify-content: flex-end; gap: 4px; font-weight: 900; font-size: 0.95rem;">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                  <span id="chat-live-viewers">1,248</span>
+               </div>
+               <div style="font-size: 0.65rem; color: var(--text-muted);">conectados</div>
+            </div>
+            <button onclick="window.hedamApp.closeGlobalChat()" style="background: none; border: none; color: white; cursor: pointer; padding: 4px;">
+               <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+            </button>
+         </div>
+      </div>
+
+      <!-- Mensaje Fijado -->
+      <div style="background: rgba(255, 30, 39, 0.08); padding: 12px 16px; border-bottom: 1px solid rgba(255,30,39,0.15); display: flex; gap: 10px;">
+         <div style="color: var(--accent-red); margin-top: 2px;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m16 8-3-3"/><path d="M12 20v-8"/><path d="M5.5 13.5 9 10"/><path d="m14 4.5 3.5 3.5"/><path d="M19 13v5.5l-4-4-4 4V13c0-2-1.5-3.5-3.5-3.5H2l4-4 4 4h5.5c2 0 3.5 1.5 3.5 3.5Z"/></svg>
+         </div>
+         <div>
+            <div style="font-size: 0.78rem; font-weight: 900; color: var(--accent-red); margin-bottom: 2px;">
+               HEDAMPRO <svg width="13" height="13" viewBox="0 0 24 24" fill="var(--accent-red)" stroke="none" style="vertical-align: middle;"><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm-2 15l-5-5 1.4-1.4 3.6 3.6 7.6-7.6L19 8l-9 9z"/></svg> <span style="background: rgba(255,30,39,0.2); padding: 2px 6px; border-radius: 4px; font-size: 0.6rem; margin-left: 4px; border: 1px solid rgba(255,30,39,0.3);">FIJADO</span>
+            </div>
+            <div style="font-size: 0.9rem; font-weight: 600; color: white;">
+               Bienvenidos al Chat Global 🙌 <br> Comparte, participa y sé parte de la comunidad.
+            </div>
+         </div>
+      </div>
+
+      <!-- Área de Mensajes -->
+      <div id="chat-live-messages" style="flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 14px; background-color: #0d0d12;">
+         <!-- Mensaje de Prueba -->
+         <div style="display: flex; gap: 10px;">
+            <div style="width: 36px; height: 36px; border-radius: 50%; background: #3b82f6; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 1rem; color: white; flex-shrink: 0;">A</div>
+            <div>
+               <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 2px;">
+                  <span style="font-weight: 800; font-size: 0.85rem; color: #e2e8f0;">Andrés_TV</span>
+               </div>
+               <div style="background: rgba(255,255,255,0.05); padding: 8px 14px; border-radius: 0 14px 14px 14px; font-size: 0.95rem; color: white; border: 1px solid rgba(255,255,255,0.05);">
+                  ¡Listo para el evento de hoy! 🔥
+               </div>
+            </div>
+         </div>
+      </div>
+
+      <!-- Barra de Input de Texto -->
+      <div style="padding: 12px 16px; border-top: 1px solid rgba(255,30,39,0.2); background: #0a0a0c;">
+         <form id="chat-live-form" style="display: flex; gap: 10px; align-items: center;">
+            <div style="flex: 1; position: relative;">
+               <span style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-muted);">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+               </span>
+               <input type="text" placeholder="Escribe un mensaje..." style="width: 100%; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 14px 14px 14px 42px; border-radius: 9999px; font-size: 0.92rem; outline: none; transition: border-color 0.2s;" />
+               <button type="button" style="position: absolute; right: 44px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-muted); cursor: pointer;" title="Enviar imagen (URL)">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+               </button>
+               <button type="button" style="position: absolute; right: 14px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-muted); cursor: pointer;" title="Enviar enlace">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+               </button>
+            </div>
+            <button type="submit" style="width: 48px; height: 48px; border-radius: 50%; background: var(--accent-red); color: white; display: flex; align-items: center; justify-content: center; border: none; cursor: pointer; flex-shrink: 0; box-shadow: 0 4px 15px var(--accent-red-glow);">
+               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
+            </button>
+         </form>
+      </div>
+    </div>
+  </div>
+  
   <!-- TOAST NOTIFICACIÓN FLOTANTE -->
   <div id="hedam-toast" class="hedam-toast-container view-hidden">
     <div class="hedam-toast-inner">
