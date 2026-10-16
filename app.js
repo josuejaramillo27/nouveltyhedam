@@ -1150,6 +1150,30 @@ let editingAnnouncementId = null;
   }
 
   // ================= FASE 2: CONTROLES DEL CHAT GLOBAL (ADMIN) =================
+  // Helper para pintar el botón del cliente (Gris o Neón)
+  function updateClientChatButton() {
+    const btn = document.getElementById('main-chat-btn');
+    const badge = document.getElementById('chat-btn-badge');
+    const dot = document.getElementById('chat-btn-dot');
+    
+    if (!btn || !badge || !dot) return;
+
+    if (state.chatGlobalStatus.isLive) {
+      // MODO EN VIVO (Brillante)
+      btn.classList.remove('chat-offline');
+      btn.classList.add('chat-live');
+      badge.classList.remove('view-hidden');
+      dot.classList.remove('offline');
+      dot.classList.add('live');
+    } else {
+      // MODO APAGADO (Gris)
+      btn.classList.remove('chat-live');
+      btn.classList.add('chat-offline');
+      badge.classList.add('view-hidden');
+      dot.classList.remove('live');
+      dot.classList.add('offline');
+    }
+  }
   const toggleChatBtn = document.getElementById('admin-toggle-chat-btn');
   const fakeViewersInput = document.getElementById('admin-fake-viewers');
   const chatStatusBadge = document.getElementById('admin-chat-status-badge');
@@ -1214,8 +1238,9 @@ let editingAnnouncementId = null;
         state.chatGlobalStatus = doc.data();
         localStorage.setItem('hedam_chat_status', JSON.stringify(state.chatGlobalStatus));
         if (state.isAuthenticated) updateAdminChatUI();
+        updateClientChatButton();
         
-        // Si lo apagan mientras un cliente lo tiene abierto, cerrárselo en la cara amablemente
+        // Si lo apagan mientras un cliente lo tiene abierto, cerrárselo
         if (!state.chatGlobalStatus.isLive) {
            window.hedamApp.closeGlobalChat();
         } else {
@@ -1226,6 +1251,9 @@ let editingAnnouncementId = null;
     });
   } catch (e) {}
 
+  // Llama a la función una vez al inicio para que el botón arranque en el color correcto
+  setTimeout(updateClientChatButton, 300);
+  
   // Inicializar UI Admin si es admin
   if (state.isAuthenticated) {
     setTimeout(updateAdminChatUI, 500);
