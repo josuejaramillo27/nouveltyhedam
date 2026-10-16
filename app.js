@@ -2135,7 +2135,11 @@ let editingAnnouncementId = null;
           if (state.activeModalAnnouncement) renderModalComments();
           if (state.selectedModerationId) renderModerationDrawer();
           if (state.isAuthenticated) renderAdminDashboard();
-          // Escuchar cambios en vivo del Banner Promocional
+        }
+      });
+    } catch (e) {}
+
+    // Escuchar cambios en vivo del Banner Promocional
     try {
       firestoreDb.collection('settings').doc('promo_banner').onSnapshot((doc) => {
         if (doc.exists) {
@@ -2145,6 +2149,7 @@ let editingAnnouncementId = null;
         }
       });
     } catch (e) {}
+  } // <--- ESTA ES LA LLAVE QUE CERRABA initFirestoreListeners() Y FALTABA
 
   // Exponer helper al objeto de la ventana
   window.hedamTriggerNotification = triggerNewAnnouncementNotification;
