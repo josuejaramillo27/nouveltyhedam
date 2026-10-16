@@ -1515,26 +1515,25 @@ body.modal-open {
   #logo-clickable span {
     font-size: 1.05rem !important;
   }
-  /* Ocultar texto secundario de cabecera en pantallas muy pequeñas */
   .header-divider,
   .header-text {
     display: none !important;
   }
   
   .header-actions {
-    gap: 5px; /* Espacio compacto perfecto para que quepan todos los botones sin desborde */
+    gap: 5px;
     flex-shrink: 0;
   }
-  /* NUEVO: Lógica del botón de Caché en Móvil */
+
   #header-refresh-btn {
-    display: none !important; /* Oculto por defecto en celulares */
+    display: none !important;
   }
   
   #header-refresh-btn.installed-mobile {
-    display: inline-flex !important; /* Se muestra si tiene la clase */
+    display: inline-flex !important;
     padding: 6px 8px !important;
   }
-  /* Botón Instalar más compacto en móvil */
+
   .pwa-install-btn {
     padding: 6px 9px;
     font-size: 0.75rem;
@@ -1549,7 +1548,6 @@ body.modal-open {
     padding: 6px 8px;
   }
 
-  /* Selector de tema compacto para que NUNCA se corte a la mitad */
   .theme-switch {
     width: 48px;
     height: 26px;
@@ -1569,12 +1567,10 @@ body.modal-open {
     height: 11px;
   }
 
-  /* Contenido Principal con espaciado móvil */
   .main-content {
-    padding: 20px 16px;
+    padding: 16px 14px;
   }
 
-  /* Tarjeta de estado vacío y lector principal */
   .card {
     padding: 24px 16px;
     border-radius: 18px;
@@ -1585,7 +1581,6 @@ body.modal-open {
     border-width: 2.5px;
   }
 
-  /* Bloqueo total de scroll de fondo en móvil cuando cualquier modal esté activo */
   html.modal-open {
     overflow: hidden !important;
     height: 100% !important;
@@ -1600,7 +1595,6 @@ body.modal-open {
     overscroll-behavior: none !important;
   }
 
-  /* Modales en móvil: clearance superior para la mascota, footer fijo con botones visibles */
   .modal-overlay {
     padding: 72px 12px 14px;
     align-items: center;
@@ -1652,7 +1646,7 @@ body.modal-open {
     flex-shrink: 0;
   }
   .modal-action-btn .vector-hover-slide {
-    display: none !important; /* Ocultar flecha decorativa derecha en móvil para que el texto nunca se corte */
+    display: none !important;
   }
   @media (max-width: 360px) {
     .modal-action-btn {
@@ -1673,7 +1667,6 @@ body.modal-open {
     height: 32px;
   }
 
-  /* Título y elementos dentro del pop-up en celular */
   #modal-title {
     font-size: 1.35rem !important;
     line-height: 1.25 !important;
@@ -1685,10 +1678,9 @@ body.modal-open {
   }
 
   .browser-vector {
-    display: none !important; /* Ocultar el mockup de pestañas decorativo para dejarle 100% del ancho al título en móvil */
+    display: none !important;
   }
 
-  /* Modal Tutorial Notificaciones en Celular */
   .notif-tutorial-card {
     padding: 26px 18px 20px !important;
     border-radius: 22px !important;
@@ -1715,15 +1707,13 @@ body.modal-open {
     font-size: 0.82rem !important;
   }
 
-  /* Drawer de Comentarios */
   .comments-drawer-panel {
     padding: 18px 14px;
     border-radius: 16px;
   }
 
-  /* ================= GESTIÓN ADMIN MÓVIL: VISTA VERTICAL / TARJETAS ================= */
   .admin-table thead {
-    display: none; /* Ocultar encabezados horizontales apretados en móvil */
+    display: none;
   }
 
   .admin-table,
@@ -1772,7 +1762,6 @@ body.modal-open {
     flex-shrink: 0;
   }
 
-  /* Fila vacía de la tabla */
   .admin-table tr td[colspan] {
     border: none;
     display: block;
@@ -1783,12 +1772,10 @@ body.modal-open {
     display: none;
   }
 
-  /* Admin Create Form - adaptado 100% a una sola columna en pantallas móviles */
   #admin-create-announcement-form > div {
     grid-template-columns: 1fr !important;
   }
 
-  /* Toast en móvil */
   .hedam-toast-container {
     bottom: 16px;
     right: 16px;
@@ -1802,7 +1789,6 @@ body.modal-open {
     padding: 10px 16px;
   }
   
-  /* Ajustes finales de la Tarjeta Unificada en Celulares */
   .card-action-container {
     flex-direction: column;
     align-items: flex-end;
@@ -1820,21 +1806,24 @@ body.modal-open {
     font-size: 1rem;
   }
 
-  /* ================= FIX: FORMULARIO ADMIN EN MÓVILES ================= */
-  #admin-create-form-card {
+  /* FIX: FORMULARIO ADMIN EN MÓVILES */
+  #admin-create-form-card,
+  #admin-banner-form-card {
     padding: 20px 16px !important;
     width: 100% !important;
     box-sizing: border-box !important;
     overflow: hidden; 
   }
 
-  #admin-create-announcement-form .input-field {
+  #admin-create-announcement-form .input-field,
+  #admin-banner-form .input-field {
     width: 100% !important;
     max-width: 100% !important;
     box-sizing: border-box !important;
   }
 
-  #admin-create-announcement-form div[style*="display: grid"] {
+  #admin-create-announcement-form div[style*="display: grid"],
+  #admin-banner-form div[style*="display: grid"] {
     grid-template-columns: 1fr !important;
     gap: 12px !important;
   }
@@ -1850,14 +1839,13 @@ body.modal-open {
     margin-bottom: 2px;
   }
 
-  #admin-create-form-card h3 {
+  #admin-create-form-card h3,
+  #admin-banner-form-card h3 {
     font-size: 1.15rem !important;
     align-items: flex-start !important;
     line-height: 1.35 !important;
   }
-
-} /* <--- AQUÍ CIERRA EL ÚNICO @media (max-width: 640px) */
-
+}
 
 /* ================= REGLAS GLOBALES (PC Y GENERAL) ================= */
 
@@ -1870,4 +1858,82 @@ body.modal-open {
   border-color: #3b82f6 !important;
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
+}
+
+/* ================= FASE 1: BANNER PROMOCIONAL 468x60 ================= */
+.promo-banner-wrapper {
+  width: 100%;
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.promo-banner-card {
+  position: relative;
+  width: 100%;
+  max-width: 680px; /* En PC mantiene proporción elegante sin estirarse de más */
+  min-height: 60px;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1.5px solid rgba(255, 30, 39, 0.75);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.5), 0 0 20px rgba(255, 30, 39, 0.25);
+  background: #0b0c10;
+  display: block;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.promo-banner-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.65), 0 0 28px rgba(255, 30, 39, 0.4);
+}
+
+.promo-banner-img {
+  width: 100%;
+  height: auto;
+  min-height: 68px;
+  max-height: 135px;
+  object-fit: cover;
+  display: block;
+}
+
+.promo-banner-btn {
+  position: absolute;
+  right: 12px;
+  bottom: 10px;
+  background: linear-gradient(135deg, #fde047 0%, #eab308 100%);
+  color: #090a0f;
+  font-size: 0.72rem;
+  font-weight: 900;
+  padding: 6px 13px;
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.65), 0 0 12px rgba(250, 204, 21, 0.45);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+.promo-banner-card:hover .promo-banner-btn {
+  transform: scale(1.05);
+  filter: brightness(1.08);
+}
+
+@media (max-width: 640px) {
+  .promo-banner-card {
+    max-width: 100%;
+    border-radius: 14px;
+  }
+  .promo-banner-img {
+    min-height: 60px;
+    max-height: 110px;
+  }
+  .promo-banner-btn {
+    right: 8px;
+    bottom: 8px;
+    font-size: 0.65rem;
+    padding: 5px 10px;
+  }
 }
