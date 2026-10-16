@@ -1860,7 +1860,7 @@ body.modal-open {
   box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
 }
 
-/* ================= FASE 1: BANNER PROMOCIONAL 468x60 ================= */
+/* ================= FASE 1: BANNER PROMOCIONAL 468x60 (GLOBAL) ================= */
 .promo-banner-wrapper {
   width: 100%;
   margin-bottom: 20px;
@@ -1872,7 +1872,7 @@ body.modal-open {
 .promo-banner-card {
   position: relative;
   width: 100%;
-  max-width: 680px; /* En PC mantiene proporción elegante sin estirarse de más */
+  max-width: 680px;
   min-height: 60px;
   border-radius: 16px;
   overflow: hidden;
@@ -1921,6 +1921,23 @@ body.modal-open {
   filter: brightness(1.08);
 }
 
+/* ================= FIX: CORRECCIÓN DE DESBORDE DE TARJETAS EN PC ================= */
+.novedad-card {
+  min-width: 0; /* Fuerza a la tarjeta a respetar el grid */
+}
+
+.card-text-container {
+  min-width: 0; /* Vital para que el texto no empuje los bordes */
+}
+
+.card-title {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%; /* Asegura que el corte con (...) funcione */
+}
+
+/* Ajustes exclusivos del banner para celulares */
 @media (max-width: 640px) {
   .promo-banner-card {
     max-width: 100%;
