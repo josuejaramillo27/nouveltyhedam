@@ -915,35 +915,19 @@
          </div>
       </div>
 
-      <!-- Mensaje Fijado -->
-      <div style="background: rgba(255, 30, 39, 0.08); padding: 12px 16px; border-bottom: 1px solid rgba(255,30,39,0.15); display: flex; gap: 10px;">
+      <!-- Mensaje Fijado Dinámico (Oculto por defecto) -->
+      <div id="chat-live-pinned-container" class="view-hidden" style="background: rgba(255, 30, 39, 0.08); padding: 12px 16px; border-bottom: 1px solid rgba(255,30,39,0.15); display: flex; gap: 10px;">
          <div style="color: var(--accent-red); margin-top: 2px;">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m16 8-3-3"/><path d="M12 20v-8"/><path d="M5.5 13.5 9 10"/><path d="m14 4.5 3.5 3.5"/><path d="M19 13v5.5l-4-4-4 4V13c0-2-1.5-3.5-3.5-3.5H2l4-4 4 4h5.5c2 0 3.5 1.5 3.5 3.5Z"/></svg>
          </div>
-         <div>
-            <div style="font-size: 0.78rem; font-weight: 900; color: var(--accent-red); margin-bottom: 2px;">
-               HEDAMPRO <svg width="13" height="13" viewBox="0 0 24 24" fill="var(--accent-red)" stroke="none" style="vertical-align: middle;"><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm-2 15l-5-5 1.4-1.4 3.6 3.6 7.6-7.6L19 8l-9 9z"/></svg> <span style="background: rgba(255,30,39,0.2); padding: 2px 6px; border-radius: 4px; font-size: 0.6rem; margin-left: 4px; border: 1px solid rgba(255,30,39,0.3);">FIJADO</span>
-            </div>
-            <div style="font-size: 0.9rem; font-weight: 600; color: white;">
-               Bienvenidos al Chat Global 🙌 <br> Comparte, participa y sé parte de la comunidad.
-            </div>
+         <div id="chat-live-pinned-content">
+            <!-- Se llena con JS -->
          </div>
       </div>
 
-      <!-- Área de Mensajes -->
-      <div id="chat-live-messages" style="flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 14px; background-color: #0d0d12;">
-         <!-- Mensaje de Prueba -->
-         <div style="display: flex; gap: 10px;">
-            <div style="width: 36px; height: 36px; border-radius: 50%; background: #3b82f6; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 1rem; color: white; flex-shrink: 0;">A</div>
-            <div>
-               <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 2px;">
-                  <span style="font-weight: 800; font-size: 0.85rem; color: #e2e8f0;">Andrés_TV</span>
-               </div>
-               <div style="background: rgba(255,255,255,0.05); padding: 8px 14px; border-radius: 0 14px 14px 14px; font-size: 0.95rem; color: white; border: 1px solid rgba(255,255,255,0.05);">
-                  ¡Listo para el evento de hoy! 🔥
-               </div>
-            </div>
-         </div>
+      <!-- Área de Mensajes (Vacía) -->
+      <div id="chat-live-messages" style="flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 14px; background-color: var(--bg-color);">
+         <!-- Mensajes inyectados por JS -->
       </div>
 
       <!-- Barra de Input de Texto -->
@@ -965,6 +949,31 @@
                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
             </button>
          </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= MODAL CHAT CERRADO (EVENTOS) ================= -->
+  <div id="chat-closed-modal" class="modal-overlay view-hidden" style="z-index: 2500;">
+    <div class="modal-card" style="max-width: 380px; padding: 0; overflow: hidden; background: #0a0a0c; border: 1.5px solid var(--accent-red); border-radius: 20px; text-align: center; position: relative;" onclick="event.stopPropagation()">
+      <button onclick="window.hedamApp.closeChatClosedModal()" class="modal-close" style="top: 12px; right: 12px; width: 30px; height: 30px; background: rgba(0,0,0,0.5); border: none;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      </button>
+      
+      <!-- Imagen ilustrativa -->
+      <div style="background: radial-gradient(circle at center, rgba(255,30,39,0.2) 0%, #0a0a0c 70%); padding: 30px 20px 10px;">
+        <div style="font-size: 5rem; margin-bottom: 10px;" class="anim-bounce">📢</div>
+        <h3 style="font-size: 1.6rem; font-weight: 900; color: white; margin: 0; text-transform: uppercase;">Chat Global</h3>
+        <div style="color: var(--accent-red); font-size: 1rem; font-weight: 900; margin-top: 4px;">ABIERTO SOLO EN FECHAS DE EVENTOS</div>
+      </div>
+      
+      <div style="padding: 20px 24px 24px;">
+        <p style="color: #a8b2c1; font-size: 0.9rem; line-height: 1.5; margin-bottom: 24px;">
+          El chat global se habilita únicamente durante los eventos oficiales de <strong>HEDAMPRO</strong>. Mantente atento a las Novedades.
+        </p>
+        <button onclick="window.hedamApp.closeChatClosedModal()" class="btn-primary" style="width: 100%; padding: 14px; font-size: 0.95rem; background: linear-gradient(135deg, #facc15, #ca8a04); color: #090a0f;">
+          Entendido
+        </button>
       </div>
     </div>
   </div>
