@@ -1860,3 +1860,63 @@ body.modal-open {
   transform: scale(1.05);
   filter: brightness(1.08);
 }
+
+/* ================= FASE 2: CHAT GLOBAL (UI/UX) ================= */
+/* Botón Neón Cliente */
+.btn-neon-chat {
+  display: flex;
+  align-items: center;
+  background: #090314;
+  border: 1.5px solid #a855f7;
+  border-radius: 9999px;
+  padding: 10px 14px;
+  width: 100%;
+  max-width: 680px;
+  box-shadow: 0 0 15px rgba(168, 85, 247, 0.3), inset 0 0 10px rgba(168, 85, 247, 0.15);
+  color: white;
+  gap: 16px;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
+  text-decoration: none;
+}
+.btn-neon-chat:hover {
+  box-shadow: 0 0 25px rgba(168, 85, 247, 0.5), inset 0 0 15px rgba(168, 85, 247, 0.3);
+  transform: translateY(-2px);
+  border-color: #c084fc;
+}
+.neon-icon-circle {
+  width: 50px; height: 50px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #a855f7 0%, #581c87 100%);
+  display: flex; align-items: center; justify-content: center;
+  border: 2px solid #c084fc;
+  box-shadow: 0 0 15px #a855f7;
+  position: relative;
+  flex-shrink: 0;
+}
+
+/* Modal Chat Live (Estilo TikTok / Rojo Oscuro) */
+.chat-live-modal {
+  background: #0a0a0c;
+  border: 1.5px solid var(--accent-red);
+  border-radius: 20px;
+  box-shadow: 0 0 40px rgba(255,30,39,0.3);
+  width: 100%;
+  max-width: 480px;
+  display: flex;
+  flex-direction: column;
+  height: 85vh;
+  max-height: 800px;
+  overflow: hidden;
+  margin: auto;
+  animation: modalPop 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@media (max-width: 640px) {
+  .chat-live-modal {
+    height: 100%;
+    max-height: 100%;
+    border-radius: 0;
+    border: none;
+  }
+}
