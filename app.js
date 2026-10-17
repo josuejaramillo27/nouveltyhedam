@@ -60,13 +60,15 @@ document.addEventListener('DOMContentLoaded', () => {
   const FIREBASE_VAPID_KEY = "BMxvRpCIBzqdlRu_b_MrYv8N17sN4panZD4QD0xaVCSJaQbii9OTb1bPlP2IDHrvgJZoT9joHt8U1sdBPzK13a0";
 
   let firestoreDb = null;
+  let rtdb = null;
   try {
     if (typeof firebase !== 'undefined') {
       if (!firebase.apps || !firebase.apps.length) {
         firebase.initializeApp(firebaseConfig);
       }
       firestoreDb = firebase.firestore();
-      console.log('[Firebase] Cloud Firestore inicializado correctamente para nouveltyhedam');
+      rtdb = firebase.database();
+      console.log('[Firebase] Cloud Firestore y RTDB inicializados correctamente');
     }
   } catch (err) {
     console.warn('[Firebase] Inicialización de Firestore omitida o pendiente:', err.message);
@@ -1205,17 +1207,6 @@ let editingAnnouncementId = null;
     if (clientViewers) clientViewers.textContent = parseInt(state.chatGlobalStatus.fakeViewers).toLocaleString();
   }
 
-  setInterval(() => {
-    if (state.chatGlobalStatus && state.chatGlobalStatus.isLive) {
-      const clientViewers = document.getElementById('chat-live-viewers');
-      if (clientViewers) {
-        // Le suma o resta entre -2 y +4 al número base cada 3.5 segundos
-        const fluctuation = Math.floor(Math.random() * 7) - 2; 
-        const currentBase = parseInt(state.chatGlobalStatus.fakeViewers) || 0;
-        clientViewers.textContent = (currentBase + fluctuation).toLocaleString();
-      }
-    }
-  }, 3500);
   
   // Escuchar botón de encendido/apagado
   if (toggleChatBtn) {
@@ -2538,6 +2529,32 @@ let editingAnnouncementId = null;
           }
         });
     } catch (e) {}
+    // ================= FASE 3: RADAR DE ESPECTADORES REALES (RTDB) =================
+    if (rtdb) {
+      const connectedRef = rtdb.ref('.info/connected'); // Detecta si mi internet está activo
+      const viewersRef = rtdb.ref('live_viewers'); // Donde anotamos a los que entran
+
+      // 1. Cuando un usuario (o incógnito) entra, lo anotamos. Si cierra la pestaña, Firebase lo borra solo.
+      connectedRef.on('value', (snap) => {
+        if (snap.val() === true) {
+          const myConnectionRef = viewersRef.push(true); // Sumar 1 persona
+          myConnectionRef.onDisconnect().remove(); // Restar 1 automáticamente al irse
+        }
+      });
+
+      // 2. Escuchamos en tiempo real cuánta gente está anotada en total
+      viewersRef.on('value', (snap) => {
+        const personasReales = snap.numChildren(); // Conteo 100% real
+        
+        // Sumamos las reales con la "base" que configures en el Panel Admin (Si pones 0, es 100% puro)
+        const baseAdmin = parseInt(state.chatGlobalStatus?.fakeViewers) || 0;
+        const totalEspectadores = personasReales + baseAdmin;
+
+        // Actualizamos la pantalla del cliente y del Admin
+        const clientViewers = document.getElementById('chat-live-viewers');
+        if (clientViewers) clientViewers.textContent = totalEspectadores.toLocaleString();
+      });
+    }
   }
 
   // Exponer helper al objeto de la ventana
