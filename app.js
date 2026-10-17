@@ -1204,7 +1204,7 @@ let editingAnnouncementId = null;
 
     // Actualizar también el contador en el chat del cliente si está abierto
     const clientViewers = document.getElementById('chat-live-viewers');
-    if (clientViewers) clientViewers.textContent = parseInt(state.chatGlobalStatus.fakeViewers).toLocaleString();
+    if (clientViewers) clientViewers.textContent = ((state.realViewersCount || 1) + (parseInt(state.chatGlobalStatus.fakeViewers) || 0)).toLocaleString();
   }
 
   
@@ -1314,7 +1314,7 @@ let editingAnnouncementId = null;
       let contentHtml = escapeHTML(msg.content);
       const urlRegex = /(https?:\/\/[^\s]+)/g;
       contentHtml = contentHtml.replace(urlRegex, (url) => {
-        if(url.match(/\.(jpeg|jpg|gif|png|webp)\$/i) != null) {
+        if (url.match(/\.(jpeg|jpg|gif|png|webp)(\?.*)?$/i) != null) {
           return `<br><img src="${url}" alt="Imagen adjunta" style="max-width: 100%; max-height: 200px; border-radius: 8px; margin-top: 6px; border: 1px solid rgba(255,255,255,0.1);" />`;
         }
         return `<a href="${url}" target="_blank" style="color: #60a5fa; text-decoration: underline; word-break: break-all;">${url}</a>`;
@@ -1373,26 +1373,33 @@ let editingAnnouncementId = null;
     chatLiveForm.addEventListener('submit', (e) => {
       e.preventDefault();
 
-      // Escudo Anti-Spam: Solo 1 mensaje cada 2.5 segundos
+      // 1. Declaramos primero si es Admin y sacamos el texto
+      const isOfficialAdmin = state.isAuthenticated;
+      const content = chatLiveInput.value.trim();
+      if (!content) return;
+
+      // 2. Comando Secreto Admin: Fijar Mensaje (/pin texto) o Desfijar (/unpin)
+      if (isOfficialAdmin && content.startsWith('/pin ')) {
+        const pinText = content.replace('/pin ', '').trim();
+        window.hedamApp.pinChatMsg(pinText);
+        chatLiveInput.value = '';
+        return;
+      }
+      if (isOfficialAdmin && content === '/unpin') {
+        window.hedamApp.pinChatMsg('');
+        chatLiveInput.value = '';
+        return;
+      }
+
+      // 3. Escudo Anti-Spam: Solo 1 mensaje cada 2.5 segundos
       const now = Date.now();
       if (now - lastChatSentTime < 2500) {
         showToast('Demasiado rápido. Espera 2 segundos.', 'alert-triangle');
         return;
       }
 
-      const content = chatLiveInput.value.trim();
-      // Comando Secreto Admin: Fijar Mensaje
-      if (isOfficialAdmin && content.startsWith('/pin ')) {
-        const pinText = content.replace('/pin ', '');
-        window.hedamApp.pinChatMsg(pinText);
-        chatLiveInput.value = '';
-        return; // Detiene el flujo para no enviarlo como mensaje normal
-      }
-      if (!content) return;
-
-      // Obtener o pedir el nombre de usuario
+      // 4. Obtener o pedir el nombre de usuario
       let userName = getUserNickname();
-      const isOfficialAdmin = state.isAuthenticated;
       
       if (!userName && !isOfficialAdmin) {
         promptNicknameConfirmation('Miembro', () => {
@@ -2531,31 +2538,48 @@ let editingAnnouncementId = null;
     } catch (e) {}
     // ================= FASE 3: RADAR DE ESPECTADORES REALES (RTDB) =================
     if (rtdb) {
-      const connectedRef = rtdb.ref('.info/connected'); // Detecta si mi internet está activo
-      const viewersRef = rtdb.ref('live_viewers'); // Donde anotamos a los que entran
+      const connectedRef = rtdb.ref('.info/connected');
+      const viewersRef = rtdb.ref('live_viewers');
 
-      // 1. Cuando un usuario (o incógnito) entra, lo anotamos. Si cierra la pestaña, Firebase lo borra solo.
       connectedRef.on('value', (snap) => {
         if (snap.val() === true) {
-          const myConnectionRef = viewersRef.push(true); // Sumar 1 persona
-          myConnectionRef.onDisconnect().remove(); // Restar 1 automáticamente al irse
+          const myConnectionRef = viewersRef.push(true);
+          myConnectionRef.onDisconnect().remove();
         }
       });
 
-      // 2. Escuchamos en tiempo real cuánta gente está anotada en total
       viewersRef.on('value', (snap) => {
-        const personasReales = snap.numChildren(); // Conteo 100% real
-        
-        // Sumamos las reales con la "base" que configures en el Panel Admin (Si pones 0, es 100% puro)
+        state.realViewersCount = snap.numChildren() || 1;
         const baseAdmin = parseInt(state.chatGlobalStatus?.fakeViewers) || 0;
-        const totalEspectadores = personasReales + baseAdmin;
+        const totalEspectadores = state.realViewersCount + baseAdmin;
 
-        // Actualizamos la pantalla del cliente y del Admin
         const clientViewers = document.getElementById('chat-live-viewers');
         if (clientViewers) clientViewers.textContent = totalEspectadores.toLocaleString();
       });
     }
-  }
+
+    // Escuchar el Mensaje Fijado en Tiempo Real (DENTRO de initFirestoreListeners)
+    try {
+      firestoreDb.collection('settings').doc('global_chat_pinned').onSnapshot((doc) => {
+        const container = document.getElementById('chat-live-pinned-container');
+        const content = document.getElementById('chat-live-pinned-content');
+        if (doc.exists && container && content) {
+          const data = doc.data();
+          if (data.text) {
+            container.classList.remove('view-hidden');
+            content.innerHTML = `
+              <div style="font-size: 0.78rem; font-weight: 900; color: var(--accent-red); margin-bottom: 2px; display: flex; align-items: center; gap: 4px;">
+                 📌 MENSAJE FIJADO <span style="background: rgba(255,30,39,0.2); padding: 2px 6px; border-radius: 4px; font-size: 0.6rem; border: 1px solid rgba(255,30,39,0.3);">HEDAMPRO</span>
+              </div>
+              <div class="pinned-msg-text" style="font-size: 0.9rem; font-weight: 600; color: var(--text-main);">${escapeHTML(data.text)}</div>
+            `;
+          } else {
+            container.classList.add('view-hidden');
+          }
+        }
+      });
+    } catch (e) {}
+  } // <--- Cierre de initFirestoreListeners()
 
   // Exponer helper al objeto de la ventana
   window.hedamTriggerNotification = triggerNewAnnouncementNotification;
@@ -2564,8 +2588,6 @@ let editingAnnouncementId = null;
   updatePwaButtonVisibility();
 
   // ================= ARRANQUE INICIAL =================
-  
-  // 1. REGISTRAR EL SERVICE WORKER (VITAL PARA PWA Y NOTIFICACIONES)
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
       navigator.serviceWorker.register('./sw.js')
@@ -2580,29 +2602,6 @@ let editingAnnouncementId = null;
     console.warn('[PWA] Los Service Workers no están soportados en este navegador.');
   }
 
-  // 2. Iniciar la interfaz y los datos
   updateView();
   initFirestoreListeners();
 });
-
-// Escuchar el Mensaje Fijado en Tiempo Real
-    try {
-      firestoreDb.collection('settings').doc('global_chat_pinned').onSnapshot((doc) => {
-        const container = document.getElementById('chat-live-pinned-container');
-        const content = document.getElementById('chat-live-pinned-content');
-        if (doc.exists && container && content) {
-          const data = doc.data();
-          if (data.text) {
-            container.classList.remove('view-hidden');
-            content.innerHTML = `
-              <div style="font-size: 0.78rem; font-weight: 900; color: var(--accent-red); margin-bottom: 2px; display: flex; align-items: center; gap: 4px;">
-                 📌 MENSAJE FIJADO <span style="background: rgba(255,30,39,0.2); padding: 2px 6px; border-radius: 4px; font-size: 0.6rem; border: 1px solid rgba(255,30,39,0.3);">HEDAMPRO</span>
-              </div>
-              <div style="font-size: 0.9rem; font-weight: 600; color: white;">${escapeHTML(data.text)}</div>
-            `;
-          } else {
-            container.classList.add('view-hidden');
-          }
-        }
-      });
-    } catch (e) {}
