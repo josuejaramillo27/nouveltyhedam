@@ -1301,8 +1301,7 @@ let editingAnnouncementId = null;
                    <span style="background: rgba(255,30,39,0.2); border: 1px solid rgba(255,30,39,0.4); padding: 2px 6px; border-radius: 4px; font-size: 0.6rem; color: var(--accent-red); font-weight: 900;">ADMIN</span>
                    <span style="font-size: 0.65rem; color: var(--text-muted);">${timeStr}</span>
                 </div>
-                <div style="background: rgba(255,30,39,0.1); padding: 8px 14px; border-radius: 0 14px 14px 14px; font-size: 0.95rem; color: white; border: 1px solid rgba(255,30,39,0.25);">
-                   ${contentHtml}
+                <div class="admin-msg-container" style="background: rgba(255,30,39,0.1); padding: 8px 14px; border-radius: 0 14px 14px 14px; font-size: 0.95rem; color: white; border: 1px solid rgba(255,30,39,0.25);">
                 </div>
              </div>
           </div>
@@ -1313,10 +1312,10 @@ let editingAnnouncementId = null;
              <div style="width: 36px; height: 36px; border-radius: 50%; background: #3b82f6; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 1rem; color: white; flex-shrink: 0;">${initial}</div>
              <div>
                 <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 2px;">
-                   <span style="font-weight: 800; font-size: 0.85rem; color: #e2e8f0;">${escapeHTML(msg.userName)}</span>
+                   <span class="user-msg-name" style="font-weight: 800; font-size: 0.85rem; color: #e2e8f0;">${escapeHTML(msg.userName)}</span>
                    <span style="font-size: 0.65rem; color: var(--text-muted);">${timeStr}</span>
                 </div>
-                <div style="background: rgba(255,255,255,0.08); padding: 8px 14px; border-radius: 0 14px 14px 14px; font-size: 0.95rem; color: white; border: 1px solid rgba(255,255,255,0.05); word-break: break-word;">
+                <div class="user-msg-container" style="background: rgba(255,255,255,0.08); padding: 8px 14px; border-radius: 0 14px 14px 14px; font-size: 0.95rem; color: white; border: 1px solid rgba(255,255,255,0.05); word-break: break-word;">
                    ${contentHtml}
                 </div>
              </div>
