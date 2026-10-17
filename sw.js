@@ -25,7 +25,7 @@ messaging.onBackgroundMessage((payload) => {
 });
 
 // 3. Service Worker para HEDAM Novedades PWA (Caché normal)
-const CACHE_NAME = 'hedam-cache-v10';
+const CACHE_NAME = 'hedam-cache-v11';
 const ASSETS_TO_CACHE = [
   './', './index.html', './style.css', './app.js', './manifest.json',
   './assets/icon-192.png', './assets/icon-512.png', './assets/logohedam.png', './assets/mascot-pink.png'
