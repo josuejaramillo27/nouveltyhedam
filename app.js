@@ -1245,7 +1245,19 @@ let editingAnnouncementId = null;
       updateAdminChatUI();
     });
   }
-
+// Escuchar botón de Notificación Masiva del Chat
+  const notifyChatBtn = document.getElementById('admin-notify-chat-btn');
+  if (notifyChatBtn) {
+    notifyChatBtn.addEventListener('click', () => {
+      if (confirm('¿Deseas enviar una Notificación Push a todos los usuarios avisando que el Chat Global está activo?')) {
+        // Usa la misma función que creamos para las Novedades
+        triggerNewAnnouncementNotification(
+          "🔴 ¡CHAT GLOBAL EN VIVO!", 
+          "El chat de la comunidad acaba de abrirse. ¡Entra ahora para participar y ganar premios!"
+        );
+      }
+    });
+  }
   // Escuchar cambios desde Firebase (para que los clientes sepan si se prendió)
   try {
     firestoreDb.collection('settings').doc('global_chat').onSnapshot((doc) => {
