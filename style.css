@@ -2154,3 +2154,15 @@ body.modal-open {
   background: linear-gradient(180deg, rgba(255, 30, 39, 0.06) 0%, #ffffff 100%) !important;
   border-color: rgba(255, 30, 39, 0.3) !important;
 }
+
+/* Proteger el botón rojo EN VIVO y limpiar barra inferior en Tema Claro */
+[data-theme="light"] .chat-live-modal > div:first-child span.anim-pulse {
+  color: #ffffff !important;
+}
+[data-theme="light"] .chat-live-modal > div:last-child {
+  background: #f8fafc !important;
+  border-top-color: #e2e8f0 !important;
+}
+[data-theme="light"] #chat-live-form button[type="submit"] svg {
+  stroke: #ffffff !important;
+}
