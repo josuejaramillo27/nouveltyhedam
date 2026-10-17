@@ -179,8 +179,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // NUEVO: Estado del Chat Global
     chatGlobalStatus: loadJSON('hedam_chat_status', {
       isLive: false,
-      chatGlobalStatus: loadJSON('hedam_chat_status', {
-      isLive: false,
       fakeViewers: 1248
     }),
     chatLiveMessages: [] // <--- NUEVA LISTA VACÍA PARA EL CHAT
