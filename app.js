@@ -1205,6 +1205,18 @@ let editingAnnouncementId = null;
     if (clientViewers) clientViewers.textContent = parseInt(state.chatGlobalStatus.fakeViewers).toLocaleString();
   }
 
+  setInterval(() => {
+    if (state.chatGlobalStatus && state.chatGlobalStatus.isLive) {
+      const clientViewers = document.getElementById('chat-live-viewers');
+      if (clientViewers) {
+        // Le suma o resta entre -2 y +4 al número base cada 3.5 segundos
+        const fluctuation = Math.floor(Math.random() * 7) - 2; 
+        const currentBase = parseInt(state.chatGlobalStatus.fakeViewers) || 0;
+        clientViewers.textContent = (currentBase + fluctuation).toLocaleString();
+      }
+    }
+  }, 3500);
+  
   // Escuchar botón de encendido/apagado
   if (toggleChatBtn) {
     toggleChatBtn.addEventListener('click', () => {
@@ -1349,6 +1361,13 @@ let editingAnnouncementId = null;
       }
 
       const content = chatLiveInput.value.trim();
+      // Comando Secreto Admin: Fijar Mensaje
+      if (isOfficialAdmin && content.startsWith('/pin ')) {
+        const pinText = content.replace('/pin ', '');
+        window.hedamApp.pinChatMsg(pinText);
+        chatLiveInput.value = '';
+        return; // Detiene el flujo para no enviarlo como mensaje normal
+      }
       if (!content) return;
 
       // Obtener o pedir el nombre de usuario
@@ -1385,20 +1404,20 @@ let editingAnnouncementId = null;
     });
   }
 
-  // D. Botones de ayuda para insertar Enlaces e Imágenes
+  // D. Botones de ayuda para insertar Enlaces e Imágenes (Modales Elegantes)
   const btnInsertImg = document.getElementById('chat-btn-insert-img');
   const btnInsertLink = document.getElementById('chat-btn-insert-link');
+  const modalImg = document.getElementById('chat-img-modal');
+  const modalLink = document.getElementById('chat-link-modal');
   
   if(btnInsertImg) {
      btnInsertImg.addEventListener('click', () => {
-        const url = prompt("Para enviar una imagen sin gastar espacio, pega la URL de la imagen aquí (debe terminar en .jpg o .png):");
-        if(url) { chatLiveInput.value += ` ${url} `; chatLiveInput.focus(); }
+        if(modalImg) modalImg.classList.remove('view-hidden');
      });
   }
   if(btnInsertLink) {
      btnInsertLink.addEventListener('click', () => {
-        const url = prompt("Pega el enlace web aquí:");
-        if(url) { chatLiveInput.value += ` ${url} `; chatLiveInput.focus(); }
+        if(modalLink) modalLink.classList.remove('view-hidden');
      });
   }
   
@@ -1712,6 +1731,36 @@ let editingAnnouncementId = null;
         renderModerationDrawer();
         renderAdminDashboard();
         renderClientView();
+      }
+    },
+    // ================= FASE 3: MODALES Y MENSAJE FIJADO =================
+    closeInsertModals: () => {
+      document.getElementById('chat-img-modal')?.classList.add('view-hidden');
+      document.getElementById('chat-link-modal')?.classList.add('view-hidden');
+    },
+    confirmInsertImg: () => {
+      const input = document.getElementById('chat-img-url-input');
+      const chatLiveInput = document.getElementById('chat-live-input');
+      if(input && input.value && chatLiveInput) {
+        chatLiveInput.value += ` ${input.value} `;
+        chatLiveInput.focus();
+      }
+      window.hedamApp.closeInsertModals();
+    },
+    confirmInsertLink: () => {
+      const input = document.getElementById('chat-link-url-input');
+      const chatLiveInput = document.getElementById('chat-live-input');
+      if(input && input.value && chatLiveInput) {
+        chatLiveInput.value += ` ${input.value} `;
+        chatLiveInput.focus();
+      }
+      window.hedamApp.closeInsertModals();
+    },
+    // Función secreta Admin: Si el admin escribe "/pin " antes del texto, se fija.
+    pinChatMsg: (text) => {
+      if (firestoreDb) {
+        firestoreDb.collection('settings').doc('global_chat_pinned').set({ text: text }, { merge: true });
+        showToast('📌 Mensaje Fijado en el chat', 'check');
       }
     },
     // --- NUEVA FUNCIÓN: LIMPIEZA PROFUNDA DE CACHÉ ---
@@ -2489,3 +2538,25 @@ let editingAnnouncementId = null;
   updateView();
   initFirestoreListeners();
 });
+
+// Escuchar el Mensaje Fijado en Tiempo Real
+    try {
+      firestoreDb.collection('settings').doc('global_chat_pinned').onSnapshot((doc) => {
+        const container = document.getElementById('chat-live-pinned-container');
+        const content = document.getElementById('chat-live-pinned-content');
+        if (doc.exists && container && content) {
+          const data = doc.data();
+          if (data.text) {
+            container.classList.remove('view-hidden');
+            content.innerHTML = `
+              <div style="font-size: 0.78rem; font-weight: 900; color: var(--accent-red); margin-bottom: 2px; display: flex; align-items: center; gap: 4px;">
+                 📌 MENSAJE FIJADO <span style="background: rgba(255,30,39,0.2); padding: 2px 6px; border-radius: 4px; font-size: 0.6rem; border: 1px solid rgba(255,30,39,0.3);">HEDAMPRO</span>
+              </div>
+              <div style="font-size: 0.9rem; font-weight: 600; color: white;">${escapeHTML(data.text)}</div>
+            `;
+          } else {
+            container.classList.add('view-hidden');
+          }
+        }
+      });
+    } catch (e) {}
