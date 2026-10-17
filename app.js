@@ -1275,6 +1275,19 @@ let editingAnnouncementId = null;
   }
   
   // ================= FASE 3: MOTOR DEL CHAT EN VIVO =================
+  
+  // Paleta de colores vibrantes para los usuarios (Alta legibilidad)
+  const AVATAR_COLORS = ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4', '#14b8a6', '#f43f5e', '#84cc16'];
+  
+  // Función matemática para darle siempre el mismo color a un usuario basado en su nombre
+  function getColorForUser(username) {
+    let hash = 0;
+    for (let i = 0; i < username.length; i++) {
+      hash = username.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
+  }
+
   function renderLiveChatMessages() {
     const container = document.getElementById('chat-live-messages');
     if (!container) return;
@@ -1287,14 +1300,17 @@ let editingAnnouncementId = null;
     let html = '';
     state.chatLiveMessages.forEach(msg => {
       const isAdmin = msg.role === 'admin';
-      const initial = msg.userName ? msg.userName.charAt(0).toUpperCase() : 'U';
+      const safeName = msg.userName || 'Usuario';
+      const initial = safeName.charAt(0).toUpperCase();
       const timeStr = new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      
+      // Obtenemos el color dinámico para este usuario
+      const userColor = getColorForUser(safeName);
       
       // Inteligencia para convertir Texto en Enlaces o Imágenes Automáticamente
       let contentHtml = escapeHTML(msg.content);
       const urlRegex = /(https?:\/\/[^\s]+)/g;
       contentHtml = contentHtml.replace(urlRegex, (url) => {
-        // Si el link termina en imagen, lo vuelve foto. Si no, lo vuelve un enlace azul.
         if(url.match(/\.(jpeg|jpg|gif|png|webp)\$/i) != null) {
           return `<br><img src="${url}" alt="Imagen adjunta" style="max-width: 100%; max-height: 200px; border-radius: 8px; margin-top: 6px; border: 1px solid rgba(255,255,255,0.1);" />`;
         }
@@ -1309,11 +1325,12 @@ let editingAnnouncementId = null;
              </div>
              <div>
                 <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 2px;">
-                   <span style="font-weight: 900; font-size: 0.85rem; color: var(--accent-red);">${escapeHTML(msg.userName)}</span>
+                   <span style="font-weight: 900; font-size: 0.85rem; color: var(--accent-red);">${escapeHTML(safeName)}</span>
                    <span style="background: rgba(255,30,39,0.2); border: 1px solid rgba(255,30,39,0.4); padding: 2px 6px; border-radius: 4px; font-size: 0.6rem; color: var(--accent-red); font-weight: 900;">ADMIN</span>
                    <span style="font-size: 0.65rem; color: var(--text-muted);">${timeStr}</span>
                 </div>
                 <div class="admin-msg-container" style="background: rgba(255,30,39,0.1); padding: 8px 14px; border-radius: 0 14px 14px 14px; font-size: 0.95rem; color: white; border: 1px solid rgba(255,30,39,0.25);">
+                   ${contentHtml}
                 </div>
              </div>
           </div>
@@ -1321,10 +1338,10 @@ let editingAnnouncementId = null;
       } else {
         html += `
           <div style="display: flex; gap: 10px; animation: fadeIn 0.3s ease;">
-             <div style="width: 36px; height: 36px; border-radius: 50%; background: #3b82f6; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 1rem; color: white; flex-shrink: 0;">${initial}</div>
+             <div style="width: 36px; height: 36px; border-radius: 50%; background: ${userColor}; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 1rem; color: white; flex-shrink: 0; box-shadow: 0 2px 8px rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1);">${initial}</div>
              <div>
                 <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 2px;">
-                   <span class="user-msg-name" style="font-weight: 800; font-size: 0.85rem; color: #e2e8f0;">${escapeHTML(msg.userName)}</span>
+                   <span class="user-msg-name" style="font-weight: 800; font-size: 0.85rem; color: ${userColor};">${escapeHTML(safeName)}</span>
                    <span style="font-size: 0.65rem; color: var(--text-muted);">${timeStr}</span>
                 </div>
                 <div class="user-msg-container" style="background: rgba(255,255,255,0.08); padding: 8px 14px; border-radius: 0 14px 14px 14px; font-size: 0.95rem; color: white; border: 1px solid rgba(255,255,255,0.05); word-break: break-word;">
