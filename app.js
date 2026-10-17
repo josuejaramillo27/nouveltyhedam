@@ -179,9 +179,14 @@ document.addEventListener('DOMContentLoaded', () => {
     // NUEVO: Estado del Chat Global
     chatGlobalStatus: loadJSON('hedam_chat_status', {
       isLive: false,
+      chatGlobalStatus: loadJSON('hedam_chat_status', {
+      isLive: false,
       fakeViewers: 1248
-    })
+    }),
+    chatLiveMessages: [] // <--- NUEVA LISTA VACÍA PARA EL CHAT
   };
+  
+  let lastChatSentTime = 0;
 let editingAnnouncementId = null;
   function saveAnnouncements() {
     localStorage.setItem(STORAGE_KEYS.ANNOUNCEMENTS, JSON.stringify(state.announcements));
@@ -1259,6 +1264,147 @@ let editingAnnouncementId = null;
     setTimeout(updateAdminChatUI, 500);
   }
   
+  // ================= FASE 3: MOTOR DEL CHAT EN VIVO =================
+  function renderLiveChatMessages() {
+    const container = document.getElementById('chat-live-messages');
+    if (!container) return;
+
+    if (state.chatLiveMessages.length === 0) {
+      container.innerHTML = `<div style="text-align: center; color: var(--text-muted); font-size: 0.85rem; padding: 20px;">No hay mensajes recientes. ¡Sé el primero en saludar!</div>`;
+      return;
+    }
+
+    let html = '';
+    state.chatLiveMessages.forEach(msg => {
+      const isAdmin = msg.role === 'admin';
+      const initial = msg.userName ? msg.userName.charAt(0).toUpperCase() : 'U';
+      const timeStr = new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      
+      // Inteligencia para convertir Texto en Enlaces o Imágenes Automáticamente
+      let contentHtml = escapeHTML(msg.content);
+      const urlRegex = /(https?:\/\/[^\s]+)/g;
+      contentHtml = contentHtml.replace(urlRegex, (url) => {
+        // Si el link termina en imagen, lo vuelve foto. Si no, lo vuelve un enlace azul.
+        if(url.match(/\.(jpeg|jpg|gif|png|webp)\$/i) != null) {
+          return `<br><img src="${url}" alt="Imagen adjunta" style="max-width: 100%; max-height: 200px; border-radius: 8px; margin-top: 6px; border: 1px solid rgba(255,255,255,0.1);" />`;
+        }
+        return `<a href="${url}" target="_blank" style="color: #60a5fa; text-decoration: underline; word-break: break-all;">${url}</a>`;
+      });
+
+      if (isAdmin) {
+        html += `
+          <div style="display: flex; gap: 10px; animation: fadeIn 0.3s ease;">
+             <div style="width: 36px; height: 36px; border-radius: 50%; background: var(--accent-red); display: flex; align-items: center; justify-content: center; flex-shrink: 0; border: 1.5px solid #ffccd0;">
+                <img src="assets/mascot-pink.png" style="width: 22px; height: 22px; object-fit: contain;" />
+             </div>
+             <div>
+                <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 2px;">
+                   <span style="font-weight: 900; font-size: 0.85rem; color: var(--accent-red);">${escapeHTML(msg.userName)}</span>
+                   <span style="background: rgba(255,30,39,0.2); border: 1px solid rgba(255,30,39,0.4); padding: 2px 6px; border-radius: 4px; font-size: 0.6rem; color: var(--accent-red); font-weight: 900;">ADMIN</span>
+                   <span style="font-size: 0.65rem; color: var(--text-muted);">${timeStr}</span>
+                </div>
+                <div style="background: rgba(255,30,39,0.1); padding: 8px 14px; border-radius: 0 14px 14px 14px; font-size: 0.95rem; color: white; border: 1px solid rgba(255,30,39,0.25);">
+                   ${contentHtml}
+                </div>
+             </div>
+          </div>
+        `;
+      } else {
+        html += `
+          <div style="display: flex; gap: 10px; animation: fadeIn 0.3s ease;">
+             <div style="width: 36px; height: 36px; border-radius: 50%; background: #3b82f6; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 1rem; color: white; flex-shrink: 0;">${initial}</div>
+             <div>
+                <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 2px;">
+                   <span style="font-weight: 800; font-size: 0.85rem; color: #e2e8f0;">${escapeHTML(msg.userName)}</span>
+                   <span style="font-size: 0.65rem; color: var(--text-muted);">${timeStr}</span>
+                </div>
+                <div style="background: rgba(255,255,255,0.08); padding: 8px 14px; border-radius: 0 14px 14px 14px; font-size: 0.95rem; color: white; border: 1px solid rgba(255,255,255,0.05); word-break: break-word;">
+                   ${contentHtml}
+                </div>
+             </div>
+          </div>
+        `;
+      }
+    });
+
+    container.innerHTML = html;
+
+    // Auto-Scroll TikTok Style
+    setTimeout(() => {
+      container.style.scrollBehavior = 'smooth';
+      container.scrollTop = container.scrollHeight;
+    }, 50);
+  }
+
+  // C. Escuchar el Formulario de Envío
+  const chatLiveForm = document.getElementById('chat-live-form');
+  const chatLiveInput = document.getElementById('chat-live-input');
+
+  if (chatLiveForm && chatLiveInput) {
+    chatLiveForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+
+      // Escudo Anti-Spam: Solo 1 mensaje cada 2.5 segundos
+      const now = Date.now();
+      if (now - lastChatSentTime < 2500) {
+        showToast('Demasiado rápido. Espera 2 segundos.', 'alert-triangle');
+        return;
+      }
+
+      const content = chatLiveInput.value.trim();
+      if (!content) return;
+
+      // Obtener o pedir el nombre de usuario
+      let userName = getUserNickname();
+      const isOfficialAdmin = state.isAuthenticated;
+      
+      if (!userName && !isOfficialAdmin) {
+        promptNicknameConfirmation('Miembro', () => {
+          localStorage.setItem(STORAGE_KEYS.USER_NICKNAME, 'Miembro');
+          localStorage.setItem(STORAGE_KEYS.USER_NICKNAME_DATE, Date.now().toString());
+        });
+        return;
+      }
+
+      if (isOfficialAdmin && !userName) userName = 'HEDAMPRO';
+
+      const newMsg = {
+        userId: isOfficialAdmin ? 'admin_official' : 'user_' + Math.random().toString(36).substring(2),
+        userName: userName,
+        role: isOfficialAdmin ? 'admin' : 'user',
+        content: content,
+        createdAt: new Date().toISOString()
+      };
+
+      // Limpiar Input y registrar tiempo
+      chatLiveInput.value = '';
+      lastChatSentTime = now;
+
+      // Guardar en Firestore
+      if (firestoreDb) {
+        firestoreDb.collection('global_chat_messages').add(newMsg)
+          .catch(err => console.warn('[Firestore] Error al enviar:', err.message));
+      }
+    });
+  }
+
+  // D. Botones de ayuda para insertar Enlaces e Imágenes
+  const btnInsertImg = document.getElementById('chat-btn-insert-img');
+  const btnInsertLink = document.getElementById('chat-btn-insert-link');
+  
+  if(btnInsertImg) {
+     btnInsertImg.addEventListener('click', () => {
+        const url = prompt("Para enviar una imagen sin gastar espacio, pega la URL de la imagen aquí (debe terminar en .jpg o .png):");
+        if(url) { chatLiveInput.value += ` ${url} `; chatLiveInput.focus(); }
+     });
+  }
+  if(btnInsertLink) {
+     btnInsertLink.addEventListener('click', () => {
+        const url = prompt("Pega el enlace web aquí:");
+        if(url) { chatLiveInput.value += ` ${url} `; chatLiveInput.focus(); }
+     });
+  }
+  
   // ================= MODERACIÓN DE CHAT EN ADMIN =================
   const moderationDrawer = document.getElementById('admin-chat-moderation-drawer');
   const moderationTitle = document.getElementById('moderation-announcement-title');
@@ -2299,7 +2445,25 @@ let editingAnnouncementId = null;
         }
       });
     } catch (e) {}
-  } // <--- ESTA ES LA LLAVE QUE CERRABA initFirestoreListeners() Y FALTABA
+    // Escuchar cambios en vivo de los MENSAJES DEL CHAT (Límite: Últimos 50 para ahorrar cuota)
+    try {
+      firestoreDb.collection('global_chat_messages')
+        .orderBy('createdAt', 'desc')
+        .limit(50) // Escudo de Lecturas: Nadie descargará más de 50 mensajes a la vez
+        .onSnapshot((snapshot) => {
+          if (!snapshot.empty) {
+            const msgs = [];
+            snapshot.forEach(doc => msgs.push({ id: doc.id, ...doc.data() }));
+            // Firebase los trae del más nuevo al más viejo (desc). Los volteamos para leer normal.
+            state.chatLiveMessages = msgs.reverse(); 
+            renderLiveChatMessages();
+          } else {
+            state.chatLiveMessages = [];
+            renderLiveChatMessages();
+          }
+        });
+    } catch (e) {}
+  }
 
   // Exponer helper al objeto de la ventana
   window.hedamTriggerNotification = triggerNewAnnouncementNotification;
