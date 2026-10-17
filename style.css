@@ -2136,3 +2136,21 @@ body.modal-open {
 [data-theme="light"] #chat-closed-modal .modal-card > div:first-of-type {
   background: radial-gradient(circle at center, rgba(255,30,39,0.08) 0%, #f8fafc 70%) !important;
 }
+/* ---------------- TEMA CLARO: TARJETAS DE NOVEDADES (FEED PRINCIPAL) ---------------- */
+[data-theme="light"] .novedad-card {
+  background: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  box-shadow: 0 4px 14px rgba(12, 16, 23, 0.05) !important;
+}
+
+[data-theme="light"] .novedad-card:hover {
+  background: #fcfdfe !important;
+  border-color: rgba(255, 30, 39, 0.4) !important;
+  box-shadow: 0 10px 25px rgba(12, 16, 23, 0.1), 0 0 15px rgba(255, 30, 39, 0.1) !important;
+}
+
+/* Tarjeta Fijada (Degradado Blanco/Rojo suave) */
+[data-theme="light"] .novedad-card.pinned-card {
+  background: linear-gradient(180deg, rgba(255, 30, 39, 0.06) 0%, #ffffff 100%) !important;
+  border-color: rgba(255, 30, 39, 0.3) !important;
+}
