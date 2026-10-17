@@ -2061,59 +2061,78 @@ body.modal-open {
 
 /* ================= FIXES VISUALES Y TEMA CLARO ================= */
 
-/* Dar más margen lateral al modal de Novedades en celular */
+/* Dar más margen lateral al modal general en celular */
 @media (max-width: 640px) {
   .modal-overlay {
-    padding: 72px 20px 16px !important; /* Más margen a los lados (20px) */
+    padding: 72px 20px 16px !important; /* Más aire a los lados */
   }
 }
 
-/* Soporte Tema Claro para el Chat Global */
+/* ---------------- TEMA CLARO: CHAT GLOBAL ---------------- */
 [data-theme="light"] .chat-live-modal {
   background: #ffffff;
   box-shadow: 0 10px 40px rgba(0,0,0,0.15), 0 0 20px rgba(255,30,39,0.15);
 }
-[data-theme="light"] #chat-live-messages {
-  background-color: #f8fafc !important;
+[data-theme="light"] .chat-live-modal > div:first-child {
+  background: #f8fafc !important; /* Cabecera clara */
+  border-bottom-color: #e2e8f0 !important;
 }
-[data-theme="light"] #chat-live-messages .user-msg-container {
-  background: #ffffff !important;
+[data-theme="light"] .chat-live-modal > div:first-child h3,
+[data-theme="light"] .chat-live-modal > div:first-child span,
+[data-theme="light"] .chat-live-modal > div:first-child button {
+  color: #0f172a !important; /* Texto oscuro en cabecera */
+}
+
+/* Fondo principal de mensajes en blanco */
+[data-theme="light"] #chat-live-messages {
+  background-color: #ffffff !important;
+}
+
+/* Mensajes de usuarios normales (Azul) en fondo claro */
+[data-theme="light"] .user-msg-container {
+  background: #f1f5f9 !important;
   color: #0f172a !important;
   border: 1px solid #e2e8f0 !important;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
 }
-[data-theme="light"] #chat-live-messages .user-msg-name {
+[data-theme="light"] .user-msg-name {
   color: #0f172a !important;
 }
-[data-theme="light"] .chat-live-modal form {
+
+/* Mensajes Admin (Rojo) en fondo claro */
+[data-theme="light"] .admin-msg-container {
+  background: #fff1f2 !important;
+  color: #0f172a !important;
+  border: 1px solid #ffe4e6 !important;
+}
+
+/* Barra de escritura en tema claro */
+[data-theme="light"] #chat-live-form {
   background: #ffffff !important;
   border-top-color: #e2e8f0 !important;
 }
-[data-theme="light"] .chat-live-modal input {
-  background: #f1f5f9 !important;
+[data-theme="light"] #chat-live-form input {
+  background: #f8fafc !important;
   border-color: #cbd5e1 !important;
   color: #0f172a !important;
 }
+[data-theme="light"] #chat-live-form svg {
+  stroke: #64748b !important;
+}
 
-/* Soporte Tema Claro para el Modal de Perfil */
-[data-theme="light"] #user-profile-modal .modal-card {
+/* ---------------- TEMA CLARO: MODALES PERFIL Y CERRADO ---------------- */
+[data-theme="light"] #user-profile-modal .modal-card,
+[data-theme="light"] #chat-closed-modal .modal-card {
   background: #ffffff;
   color: #0f172a;
 }
-[data-theme="light"] #user-profile-modal h3 {
-  color: #0f172a !important;
-}
-[data-theme="light"] #user-profile-modal p {
-  color: #64748b !important;
-}
-
-/* Modal Chat Cerrado - Fondo */
-[data-theme="light"] #chat-closed-modal .modal-card {
-  background: #ffffff;
-}
-[data-theme="light"] #chat-closed-modal .modal-card > div:first-of-type {
-  background: radial-gradient(circle at center, rgba(255,30,39,0.1) 0%, #ffffff 70%) !important;
-}
+[data-theme="light"] #user-profile-modal h3,
 [data-theme="light"] #chat-closed-modal h3 {
   color: #0f172a !important;
+}
+[data-theme="light"] #user-profile-modal p,
+[data-theme="light"] #chat-closed-modal p {
+  color: #64748b !important;
+}
+[data-theme="light"] #chat-closed-modal .modal-card > div:first-of-type {
+  background: radial-gradient(circle at center, rgba(255,30,39,0.08) 0%, #f8fafc 70%) !important;
 }
