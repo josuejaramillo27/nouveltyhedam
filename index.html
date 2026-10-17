@@ -516,8 +516,13 @@
                   Enviar Alerta Push
                 </button>
              </div>
+            <div>
+                <label style="display: block; font-weight: 700; font-size: 0.85rem; margin-bottom: 6px;">Moderación</label>
+                <button type="button" onclick="window.hedamApp.openGlobalChat()" class="btn-outline" style="width: 100%; border-color: #a855f7; color: white; background: rgba(168,85,247,0.2);">
+                  Abrir Chat Aquí
+                </button>
+             </div>
           </div>
-        </div>
         
         <!-- Formulario Crear Novedad -->
         <div id="admin-create-form-card" class="card mb-4 view-hidden" style="border: 1px solid var(--accent-red);">
@@ -968,9 +973,11 @@
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
       </button>
       
-      <!-- Imagen ilustrativa -->
+      <!-- Imagen ilustrativa Vectorial -->
       <div style="background: radial-gradient(circle at center, rgba(255,30,39,0.2) 0%, #0a0a0c 70%); padding: 30px 20px 10px;">
-        <div style="font-size: 5rem; margin-bottom: 10px;" class="anim-bounce">📢</div>
+        <div style="margin-bottom: 15px; color: var(--accent-red); display: flex; justify-content: center;" class="anim-shake">
+          <svg width="76" height="76" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>
+        </div>
         <h3 style="font-size: 1.6rem; font-weight: 900; color: white; margin: 0; text-transform: uppercase;">Chat Global</h3>
         <div style="color: var(--accent-red); font-size: 1rem; font-weight: 900; margin-top: 4px;">ABIERTO SOLO EN FECHAS DE EVENTOS</div>
       </div>
